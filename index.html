@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>S&P Referral Portal | Admin Mode</title>
+    <title>S&P Referral Portal | User Tracking</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -39,7 +39,7 @@
         <div id="auth-section" class="max-w-md mx-auto card p-8 mt-10">
             <div id="login-view">
                 <h2 class="text-2xl font-bold text-navy mb-2 text-center">Log ind</h2>
-                <p class="text-xs text-gray-400 text-center mb-6 underline cursor-help" title="Brug admin@sp.dk / admin123 for admin adgang">Söderberg & Partners Intranet</p>
+                <p class="text-xs text-gray-400 text-center mb-6 underline cursor-help">Söderberg & Partners Intranet</p>
                 <form onsubmit="handleLogin(event)" class="space-y-4">
                     <input type="email" id="login-email" placeholder="E-mail" required class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-900">
                     <input type="password" id="login-pass" placeholder="Password" required class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-900">
@@ -53,10 +53,10 @@
             <div id="register-view" class="hidden">
                 <h2 class="text-2xl font-bold text-navy mb-6 text-center">Opret Profil</h2>
                 <form onsubmit="handleRegister(event)" class="space-y-4">
-                    <input type="text" id="reg-name" placeholder="Navn" required class="w-full p-2 border rounded">
-                    <input type="email" id="reg-email" placeholder="E-mail" required class="w-full p-2 border rounded">
-                    <input type="password" id="reg-pass" placeholder="Password" required class="w-full p-2 border rounded">
-                    <select id="reg-dept" class="w-full p-2 border rounded bg-white">
+                    <input type="text" id="reg-name" placeholder="Navn" required class="w-full p-2 border rounded text-sm">
+                    <input type="email" id="reg-email" placeholder="E-mail" required class="w-full p-2 border rounded text-sm">
+                    <input type="password" id="reg-pass" placeholder="Password" required class="w-full p-2 border rounded text-sm">
+                    <select id="reg-dept" class="w-full p-2 border rounded bg-white text-sm">
                         <option value="Non-Life">Non-Life</option>
                         <option value="Pensions">Pensions</option>
                         <option value="FOGI">FOGI</option>
@@ -70,61 +70,84 @@
         <div id="dashboard-section" class="hidden space-y-6">
             
             <div id="admin-view" class="hidden space-y-4">
-                <div class="flex justify-between items-end">
-                    <h2 class="text-2xl font-bold text-navy"><i class="fas fa-shield-alt mr-2"></i>Admin Kontrolpanel</h2>
-                    <span class="text-xs text-gray-500" id="total-count">Total henvisninger: 0</span>
-                </div>
+                <h2 class="text-2xl font-bold text-navy"><i class="fas fa-shield-alt mr-2"></i>Admin Kontrolpanel</h2>
                 <div class="card overflow-hidden">
                     <table class="w-full text-left text-sm">
-                        <thead class="bg-gray-100 border-b border-gray-200 text-gray-600">
+                        <thead class="bg-gray-100 border-b text-gray-600 uppercase text-[10px] font-bold">
                             <tr>
                                 <th class="px-4 py-3">Dato</th>
-                                <th class="px-4 py-3">Virksomhed</th>
+                                <th class="px-4 py-3">Virksomhed & Kontakt</th>
                                 <th class="px-4 py-3">Fra (Afsender)</th>
                                 <th class="px-4 py-3">Til (Modtager)</th>
                                 <th class="px-4 py-3">Status</th>
                             </tr>
                         </thead>
-                        <tbody id="admin-table-body" class="divide-y divide-gray-100">
-                            </tbody>
+                        <tbody id="admin-table-body" class="divide-y divide-gray-100 italic"></tbody>
                     </table>
                 </div>
             </div>
 
-            <div id="user-view" class="grid md:grid-cols-3 gap-6">
-                <div class="card p-6">
-                    <h3 class="text-gray-400 text-xs font-bold uppercase mb-4 text-center tracking-widest">Din Statistik</h3>
-                    <canvas id="referralChart" height="250"></canvas>
-                </div>
-                
-                <div class="md:col-span-2 card p-8">
-                    <h3 class="text-xl font-bold text-navy mb-6">Ny Henvisning</h3>
-                    <div class="grid md:grid-cols-2 gap-8">
-                        <div class="space-y-4 text-sm">
-                            <label class="block font-bold text-gray-500 uppercase text-[10px]">Virksomhedsdata</label>
-                            <div class="flex">
-                                <input type="text" id="cvr-input" maxlength="8" placeholder="Indtast CVR nr..." class="w-full p-2 border rounded-l focus:border-navy outline-none">
-                                <button onclick="lookupCVR()" class="bg-navy text-white px-4 rounded-r hover:opacity-90">Søg</button>
+            <div id="user-view" class="space-y-6">
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="card p-6">
+                        <h3 class="text-gray-400 text-xs font-bold uppercase mb-4 text-center tracking-widest">Din Statistik</h3>
+                        <canvas id="referralChart" height="250"></canvas>
+                    </div>
+                    
+                    <div class="md:col-span-2 card p-8">
+                        <h3 class="text-xl font-bold text-navy mb-6 italic underline">Ny Henvisning</h3>
+                        <div class="grid md:grid-cols-2 gap-8">
+                            <div class="space-y-4 text-sm">
+                                <label class="block font-bold text-gray-400 uppercase text-[10px]">Virksomhedsdata (CVR)</label>
+                                <div class="flex">
+                                    <input type="text" id="cvr-input" maxlength="8" placeholder="CVR nr..." class="w-full p-2 border rounded-l focus:border-navy outline-none">
+                                    <button onclick="lookupCVR()" class="bg-navy text-white px-4 rounded-r hover:opacity-90 font-bold">SØG</button>
+                                </div>
+                                <input type="text" id="comp-name" placeholder="Firmanavn" class="w-full p-2 border rounded bg-gray-50 font-bold text-navy" readonly>
+                                <input type="text" id="comp-addr" placeholder="Adresse" class="w-full p-2 border rounded bg-gray-50 text-xs" readonly>
+                                
+                                <div class="pt-2 border-t border-gray-100 space-y-3">
+                                    <label class="block font-bold text-gray-400 uppercase text-[10px]">Kontaktperson hos kunden</label>
+                                    <input type="text" id="firm-contact-name" placeholder="Navn på kontaktperson" class="w-full p-2 border rounded focus:ring-1 focus:ring-navy outline-none">
+                                    <input type="tel" id="firm-contact-phone" placeholder="Direkte telefon" class="w-full p-2 border rounded focus:ring-1 focus:ring-navy outline-none">
+                                    <input type="email" id="firm-contact-email" placeholder="Direkte e-mail" class="w-full p-2 border rounded focus:ring-1 focus:ring-navy outline-none">
+                                </div>
                             </div>
-                            <input type="text" id="comp-name" placeholder="Firmanavn" class="w-full p-2 border rounded bg-gray-50 font-bold" readonly>
-                            <input type="text" id="comp-addr" placeholder="Adresse" class="w-full p-2 border rounded bg-gray-50 text-xs" readonly>
-                            <input type="text" id="comp-db" placeholder="Branche" class="w-full p-2 border rounded bg-gray-50 text-[10px]" readonly>
-                        </div>
 
-                        <div class="space-y-3">
-                            <label class="block font-bold text-gray-500 uppercase text-[10px]">Henvisning til</label>
-                            <select id="target-dept" onchange="filterAdvisors()" class="w-full p-2 border rounded bg-white text-sm">
-                                <option value="">Vælg Afdeling...</option>
-                                <option value="Non-Life">Non-Life</option>
-                                <option value="Pensions">Pensions</option>
-                                <option value="FOGI">FOGI</option>
-                            </select>
-                            <select id="advisor-select" class="w-full p-2 border rounded bg-white text-sm">
-                                <option value="">Vælg Rådgiver...</option>
-                            </select>
-                            <textarea id="comment" maxlength="300" placeholder="Besked (max 300 tegn)" class="w-full p-2 border rounded text-xs h-20"></textarea>
-                            <button onclick="sendReferral()" class="w-full btn-primary py-3 rounded-lg font-bold">SEND HENVISNING</button>
+                            <div class="space-y-3">
+                                <label class="block font-bold text-gray-400 uppercase text-[10px]">Modtager af henvisning</label>
+                                <select id="target-dept" onchange="filterAdvisors()" class="w-full p-2 border rounded bg-white text-sm font-bold border-navy">
+                                    <option value="">Vælg Afdeling...</option>
+                                    <option value="Non-Life">Non-Life</option>
+                                    <option value="Pensions">Pensions</option>
+                                    <option value="FOGI">FOGI</option>
+                                </select>
+                                <select id="advisor-select" class="w-full p-2 border rounded bg-white text-sm">
+                                    <option value="">Vælg Rådgiver...</option>
+                                </select>
+                                <textarea id="comment" maxlength="300" placeholder="Besked (max 300 tegn)" class="w-full p-2 border rounded text-xs h-24"></textarea>
+                                <button onclick="sendReferral()" class="w-full btn-primary py-3 rounded-lg font-bold shadow-lg uppercase text-sm tracking-widest">Send Nu</button>
+                            </div>
                         </div>
+                    </div>
+                </div>
+
+                <div class="card p-6">
+                    <h3 class="text-lg font-bold text-navy mb-4 italic"><i class="fas fa-list-ul mr-2 text-gold"></i>Dine Henvisninger (Sendt & Modtaget)</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-gray-50 text-gray-500 uppercase text-[10px]">
+                                <tr>
+                                    <th class="px-4 py-3">Dato</th>
+                                    <th class="px-4 py-3">Virksomhed</th>
+                                    <th class="px-4 py-3">Rolle</th>
+                                    <th class="px-4 py-3">Modpart</th>
+                                    <th class="px-4 py-3">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="user-table-body" class="divide-y divide-gray-100">
+                                </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -132,12 +155,12 @@
     </div>
 
     <script>
-        // Start-data hvis hukommelsen er tom
         let referrals = JSON.parse(localStorage.getItem('referrals')) || [];
         const mockAdvisors = [
             { name: "Mads Jensen", dept: "Pensions" },
             { name: "Søren Hansen", dept: "Non-Life" },
-            { name: "Birgitte Berg", dept: "FOGI" }
+            { name: "Birgitte Berg", dept: "FOGI" },
+            { name: "Lars Larsen", dept: "Non-Life" }
         ];
 
         function toggleAuth(showLogin) {
@@ -163,7 +186,6 @@
             const email = document.getElementById('login-email').value;
             const pass = document.getElementById('login-pass').value;
 
-            // Admin login shortcut
             if(email === "admin@sp.dk" && pass === "admin123") {
                 loginSuccess({ name: "System Admin", email: email, role: "admin" });
                 return;
@@ -188,7 +210,8 @@
                 document.getElementById('admin-view').classList.remove('hidden');
                 renderAdminTable();
             }
-            initChart();
+            renderUserTable(user.name);
+            initChart(user.name);
         }
 
         async function lookupCVR() {
@@ -197,8 +220,7 @@
                 const response = await fetch(`https://cvrapi.dk/api?search=${cvr}&country=dk`);
                 const data = await response.json();
                 document.getElementById('comp-name').value = data.name;
-                document.getElementById('comp-addr').value = data.address;
-                document.getElementById('comp-db').value = data.industrycode;
+                document.getElementById('comp-addr').value = data.address + ", " + data.zipcode + " " + data.city;
             } catch (e) { alert("CVR fejl"); }
         }
 
@@ -214,53 +236,85 @@
         }
 
         function sendReferral() {
-            const sender = JSON.parse(localStorage.getItem('currentUser')) || {name: "Gæst", dept: "Ukendt"};
+            const sender = JSON.parse(localStorage.getItem('currentUser')) || {name: "Ukendt", dept: "N/A"};
+            const compName = document.getElementById('comp-name').value;
+            const advisor = document.getElementById('advisor-select').value;
+            
+            if(!compName || !advisor) return alert("Udfyld alt.");
+
             const newRef = {
                 date: new Date().toLocaleDateString('da-DK'),
-                company: document.getElementById('comp-name').value,
+                company: compName,
+                contact: {
+                    name: document.getElementById('firm-contact-name').value,
+                    phone: document.getElementById('firm-contact-phone').value,
+                    email: document.getElementById('firm-contact-email').value
+                },
+                senderName: sender.name,
                 from: sender.name + " (" + sender.dept + ")",
-                to: document.getElementById('advisor-select').value + " (" + document.getElementById('target-dept').value + ")",
+                receiverName: advisor,
+                to: advisor + " (" + document.getElementById('target-dept').value + ")",
                 status: "Sendt"
             };
 
-            if(!newRef.company || !document.getElementById('advisor-select').value) {
-                alert("Udfyld venligst alle felter");
-                return;
-            }
-
             referrals.push(newRef);
             localStorage.setItem('referrals', JSON.stringify(referrals));
-            alert("Henvisning sendt succesfuldt!");
-            location.reload(); // Opdater for at se ændringer
+            alert("Henvisning sendt!");
+            location.reload();
+        }
+
+        function renderUserTable(currentUserName) {
+            const tbody = document.getElementById('user-table-body');
+            tbody.innerHTML = "";
+            
+            const userRefs = referrals.filter(r => r.senderName === currentUserName || r.receiverName === currentUserName);
+
+            userRefs.slice().reverse().forEach(ref => {
+                const isSender = ref.senderName === currentUserName;
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-50 border-b border-gray-50 transition">
+                        <td class="px-4 py-3 text-gray-400 text-xs">${ref.date}</td>
+                        <td class="px-4 py-3 font-bold text-navy">${ref.company}</td>
+                        <td class="px-4 py-3"><span class="text-[10px] px-2 py-1 rounded font-bold ${isSender ? 'bg-blue-50 text-blue-600' : 'bg-gold/20 text-yellow-800'}">${isSender ? 'SENDT' : 'MODTAGET'}</span></td>
+                        <td class="px-4 py-3 text-xs">${isSender ? 'Til: ' + ref.to : 'Fra: ' + ref.from}</td>
+                        <td class="px-4 py-3"><span class="text-green-600 font-bold text-xs uppercase">✓ OK</span></td>
+                    </tr>
+                `;
+            });
+            if(userRefs.length === 0) tbody.innerHTML = "<tr><td colspan='5' class='p-4 text-center text-gray-400 italic'>Ingen henvisninger fundet endnu.</td></tr>";
         }
 
         function renderAdminTable() {
             const tbody = document.getElementById('admin-table-body');
             tbody.innerHTML = "";
-            document.getElementById('total-count').innerText = "Total henvisninger: " + referrals.length;
-
-            referrals.reverse().forEach(ref => {
+            referrals.slice().reverse().forEach(ref => {
                 tbody.innerHTML += `
-                    <tr class="hover:bg-gray-50 transition">
-                        <td class="px-4 py-3 text-gray-500">${ref.date}</td>
-                        <td class="px-4 py-3 font-bold text-navy">${ref.company}</td>
-                        <td class="px-4 py-3">${ref.from}</td>
-                        <td class="px-4 py-3">${ref.to}</td>
-                        <td class="px-4 py-3"><span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs">${ref.status}</span></td>
+                    <tr class="hover:bg-gray-50 border-b border-gray-50">
+                        <td class="px-4 py-3 text-gray-400 text-xs">${ref.date}</td>
+                        <td class="px-4 py-3">
+                            <div class="font-bold text-navy">${ref.company}</div>
+                            <div class="text-[10px] text-gray-500">${ref.contact.name || '-'} | Tlf: ${ref.contact.phone || '-'}</div>
+                        </td>
+                        <td class="px-4 py-3 text-xs italic">${ref.from}</td>
+                        <td class="px-4 py-3 text-xs font-semibold text-blue-800 italic">${ref.to}</td>
+                        <td class="px-4 py-3"><span class="bg-green-100 text-green-700 px-2 py-1 rounded text-[10px] font-bold uppercase">${ref.status}</span></td>
                     </tr>
                 `;
             });
         }
 
-        function initChart() {
+        function initChart(currentUserName) {
             const ctx = document.getElementById('referralChart').getContext('2d');
+            const sentCount = referrals.filter(r => r.senderName === currentUserName).length;
+            const receivedCount = referrals.filter(r => r.receiverName === currentUserName).length;
+
             new Chart(ctx, {
                 type: 'doughnut',
                 data: {
                     labels: ['Sendt', 'Modtaget'],
-                    datasets: [{ data: [referrals.length, 2], backgroundColor: ['#002147', '#a68d5d'] }]
+                    datasets: [{ data: [sentCount, receivedCount], backgroundColor: ['#002147', '#a68d5d'] }]
                 },
-                options: { cutout: '70%', plugins: { legend: { position: 'bottom' } } }
+                options: { cutout: '75%', plugins: { legend: { position: 'bottom', labels: { font: { size: 10 } } } } }
             });
         }
     </script>
