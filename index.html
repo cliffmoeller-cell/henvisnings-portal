@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>S&P Referral Portal</title>
+    <title>S&P Referral Portal | Admin Mode</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -15,6 +15,7 @@
         .btn-primary { background-color: var(--sp-navy); color: white; transition: all 0.2s; }
         .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
         .card { background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e5e7eb; }
+        .admin-badge { background-color: #ef4444; color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; text-transform: uppercase; }
     </style>
 </head>
 <body>
@@ -26,17 +27,19 @@
                 <span class="text-xl font-semibold tracking-tight">Referral Portal</span>
             </div>
             <div id="user-info" class="hidden flex items-center space-x-4 text-sm">
-                <span><i class="fas fa-user-circle mr-1"></i> <strong id="display-name"></strong> (<span id="display-dept"></span>)</span>
-                <button onclick="location.reload()" class="bg-white/10 px-3 py-1 rounded hover:bg-white/20 transition">Log ud</button>
+                <span id="admin-indicator" class="hidden admin-badge font-bold">Admin</span>
+                <span><i class="fas fa-user-circle mr-1"></i> <strong id="display-name"></strong></span>
+                <button onclick="location.reload()" class="bg-white/10 px-3 py-1 rounded hover:bg-white/20 transition text-xs">Log ud</button>
             </div>
         </div>
     </nav>
 
-    <div class="container mx-auto py-12 px-4 max-w-6xl">
+    <div class="container mx-auto py-8 px-4 max-w-6xl">
         
-        <div id="auth-section" class="max-w-md mx-auto card p-8">
+        <div id="auth-section" class="max-w-md mx-auto card p-8 mt-10">
             <div id="login-view">
-                <h2 class="text-2xl font-bold text-navy mb-6 text-center">Log ind</h2>
+                <h2 class="text-2xl font-bold text-navy mb-2 text-center">Log ind</h2>
+                <p class="text-xs text-gray-400 text-center mb-6 underline cursor-help" title="Brug admin@sp.dk / admin123 for admin adgang">Söderberg & Partners Intranet</p>
                 <form onsubmit="handleLogin(event)" class="space-y-4">
                     <input type="email" id="login-email" placeholder="E-mail" required class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-900">
                     <input type="password" id="login-pass" placeholder="Password" required class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-900">
@@ -47,28 +50,219 @@
                 </p>
             </div>
 
-            <div id="register-view" class="hidden text-left">
+            <div id="register-view" class="hidden">
                 <h2 class="text-2xl font-bold text-navy mb-6 text-center">Opret Profil</h2>
                 <form onsubmit="handleRegister(event)" class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase">Fulde Navn</label>
-                        <input type="text" id="reg-name" required class="w-full p-2 border rounded mt-1">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase">E-mail</label>
-                        <input type="email" id="reg-email" required class="w-full p-2 border rounded mt-1">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase">Vælg Password</label>
-                        <input type="password" id="reg-pass" required class="w-full p-2 border rounded mt-1">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase">Din Afdeling</label>
-                        <select id="reg-dept" class="w-full p-2 border rounded mt-1 bg-white">
-                            <option value="Non-Life">Non-Life</option>
-                            <option value="Pensions">Pensions</option>
-                            <option value="FOGI">FOGI</option>
-                        </select>
-                    </div>
-                    <button type="submit" class="w-full btn-primary py-3 rounded-lg font-bold mt-2">Opret Bruger</button>
+                    <input type="text" id="reg-name" placeholder="Navn" required class="w-full p-2 border rounded">
+                    <input type="email" id="reg-email" placeholder="E-mail" required class="w-full p-2 border rounded">
+                    <input type="password" id="reg-pass" placeholder="Password" required class="w-full p-2 border rounded">
+                    <select id="reg-dept" class="w-full p-2 border rounded bg-white">
+                        <option value="Non-Life">Non-Life</option>
+                        <option value="Pensions">Pensions</option>
+                        <option value="FOGI">FOGI</option>
+                    </select>
+                    <button type="submit" class="w-full btn-primary py-3 rounded-lg font-bold">Opret Bruger</button>
                 </form>
+                <p class="mt-4 text-center text-xs underline cursor-pointer" onclick="toggleAuth(true)">Gå tilbage</p>
+            </div>
+        </div>
+
+        <div id="dashboard-section" class="hidden space-y-6">
+            
+            <div id="admin-view" class="hidden space-y-4">
+                <div class="flex justify-between items-end">
+                    <h2 class="text-2xl font-bold text-navy"><i class="fas fa-shield-alt mr-2"></i>Admin Kontrolpanel</h2>
+                    <span class="text-xs text-gray-500" id="total-count">Total henvisninger: 0</span>
+                </div>
+                <div class="card overflow-hidden">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-gray-100 border-b border-gray-200 text-gray-600">
+                            <tr>
+                                <th class="px-4 py-3">Dato</th>
+                                <th class="px-4 py-3">Virksomhed</th>
+                                <th class="px-4 py-3">Fra (Afsender)</th>
+                                <th class="px-4 py-3">Til (Modtager)</th>
+                                <th class="px-4 py-3">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-table-body" class="divide-y divide-gray-100">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="user-view" class="grid md:grid-cols-3 gap-6">
+                <div class="card p-6">
+                    <h3 class="text-gray-400 text-xs font-bold uppercase mb-4 text-center tracking-widest">Din Statistik</h3>
+                    <canvas id="referralChart" height="250"></canvas>
+                </div>
+                
+                <div class="md:col-span-2 card p-8">
+                    <h3 class="text-xl font-bold text-navy mb-6">Ny Henvisning</h3>
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div class="space-y-4 text-sm">
+                            <label class="block font-bold text-gray-500 uppercase text-[10px]">Virksomhedsdata</label>
+                            <div class="flex">
+                                <input type="text" id="cvr-input" maxlength="8" placeholder="Indtast CVR nr..." class="w-full p-2 border rounded-l focus:border-navy outline-none">
+                                <button onclick="lookupCVR()" class="bg-navy text-white px-4 rounded-r hover:opacity-90">Søg</button>
+                            </div>
+                            <input type="text" id="comp-name" placeholder="Firmanavn" class="w-full p-2 border rounded bg-gray-50 font-bold" readonly>
+                            <input type="text" id="comp-addr" placeholder="Adresse" class="w-full p-2 border rounded bg-gray-50 text-xs" readonly>
+                            <input type="text" id="comp-db" placeholder="Branche" class="w-full p-2 border rounded bg-gray-50 text-[10px]" readonly>
+                        </div>
+
+                        <div class="space-y-3">
+                            <label class="block font-bold text-gray-500 uppercase text-[10px]">Henvisning til</label>
+                            <select id="target-dept" onchange="filterAdvisors()" class="w-full p-2 border rounded bg-white text-sm">
+                                <option value="">Vælg Afdeling...</option>
+                                <option value="Non-Life">Non-Life</option>
+                                <option value="Pensions">Pensions</option>
+                                <option value="FOGI">FOGI</option>
+                            </select>
+                            <select id="advisor-select" class="w-full p-2 border rounded bg-white text-sm">
+                                <option value="">Vælg Rådgiver...</option>
+                            </select>
+                            <textarea id="comment" maxlength="300" placeholder="Besked (max 300 tegn)" class="w-full p-2 border rounded text-xs h-20"></textarea>
+                            <button onclick="sendReferral()" class="w-full btn-primary py-3 rounded-lg font-bold">SEND HENVISNING</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Start-data hvis hukommelsen er tom
+        let referrals = JSON.parse(localStorage.getItem('referrals')) || [];
+        const mockAdvisors = [
+            { name: "Mads Jensen", dept: "Pensions" },
+            { name: "Søren Hansen", dept: "Non-Life" },
+            { name: "Birgitte Berg", dept: "FOGI" }
+        ];
+
+        function toggleAuth(showLogin) {
+            document.getElementById('login-view').classList.toggle('hidden', !showLogin);
+            document.getElementById('register-view').classList.toggle('hidden', showLogin);
+        }
+
+        function handleRegister(e) {
+            e.preventDefault();
+            const user = {
+                name: document.getElementById('reg-name').value,
+                email: document.getElementById('reg-email').value,
+                pass: document.getElementById('reg-pass').value,
+                dept: document.getElementById('reg-dept').value
+            };
+            localStorage.setItem('currentUser', JSON.stringify(user));
+            alert("Bruger oprettet!");
+            loginSuccess(user);
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const pass = document.getElementById('login-pass').value;
+
+            // Admin login shortcut
+            if(email === "admin@sp.dk" && pass === "admin123") {
+                loginSuccess({ name: "System Admin", email: email, role: "admin" });
+                return;
+            }
+
+            const storedUser = JSON.parse(localStorage.getItem('currentUser'));
+            if(storedUser && storedUser.email === email && storedUser.pass === pass) {
+                loginSuccess(storedUser);
+            } else {
+                alert("Fejl i login!");
+            }
+        }
+
+        function loginSuccess(user) {
+            document.getElementById('auth-section').classList.add('hidden');
+            document.getElementById('dashboard-section').classList.remove('hidden');
+            document.getElementById('user-info').classList.remove('hidden');
+            document.getElementById('display-name').innerText = user.name;
+            
+            if(user.role === 'admin') {
+                document.getElementById('admin-indicator').classList.remove('hidden');
+                document.getElementById('admin-view').classList.remove('hidden');
+                renderAdminTable();
+            }
+            initChart();
+        }
+
+        async function lookupCVR() {
+            const cvr = document.getElementById('cvr-input').value;
+            try {
+                const response = await fetch(`https://cvrapi.dk/api?search=${cvr}&country=dk`);
+                const data = await response.json();
+                document.getElementById('comp-name').value = data.name;
+                document.getElementById('comp-addr').value = data.address;
+                document.getElementById('comp-db').value = data.industrycode;
+            } catch (e) { alert("CVR fejl"); }
+        }
+
+        function filterAdvisors() {
+            const target = document.getElementById('target-dept').value;
+            const select = document.getElementById('advisor-select');
+            select.innerHTML = '<option value="">Vælg Rådgiver...</option>';
+            mockAdvisors.filter(a => a.dept === target).forEach(adv => {
+                let opt = document.createElement('option');
+                opt.value = adv.name; opt.innerHTML = adv.name;
+                select.appendChild(opt);
+            });
+        }
+
+        function sendReferral() {
+            const sender = JSON.parse(localStorage.getItem('currentUser')) || {name: "Gæst", dept: "Ukendt"};
+            const newRef = {
+                date: new Date().toLocaleDateString('da-DK'),
+                company: document.getElementById('comp-name').value,
+                from: sender.name + " (" + sender.dept + ")",
+                to: document.getElementById('advisor-select').value + " (" + document.getElementById('target-dept').value + ")",
+                status: "Sendt"
+            };
+
+            if(!newRef.company || !document.getElementById('advisor-select').value) {
+                alert("Udfyld venligst alle felter");
+                return;
+            }
+
+            referrals.push(newRef);
+            localStorage.setItem('referrals', JSON.stringify(referrals));
+            alert("Henvisning sendt succesfuldt!");
+            location.reload(); // Opdater for at se ændringer
+        }
+
+        function renderAdminTable() {
+            const tbody = document.getElementById('admin-table-body');
+            tbody.innerHTML = "";
+            document.getElementById('total-count').innerText = "Total henvisninger: " + referrals.length;
+
+            referrals.reverse().forEach(ref => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="px-4 py-3 text-gray-500">${ref.date}</td>
+                        <td class="px-4 py-3 font-bold text-navy">${ref.company}</td>
+                        <td class="px-4 py-3">${ref.from}</td>
+                        <td class="px-4 py-3">${ref.to}</td>
+                        <td class="px-4 py-3"><span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs">${ref.status}</span></td>
+                    </tr>
+                `;
+            });
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('referralChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Sendt', 'Modtaget'],
+                    datasets: [{ data: [referrals.length, 2], backgroundColor: ['#002147', '#a68d5d'] }]
+                },
+                options: { cutout: '70%', plugins: { legend: { position: 'bottom' } } }
+            });
+        }
+    </script>
+</body>
+</html>
