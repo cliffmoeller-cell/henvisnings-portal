@@ -79,7 +79,7 @@
             <div id="user-view" class="space-y-6">
                 <div class="grid md:grid-cols-3 gap-6">
                     <div class="card p-6">
-                        <canvas id="referralChart" height="250"></canvas>
+                        <canvas id="HenvisningChart" height="250"></canvas>
                     </div>
                     <div class="md:col-span-2 card p-8">
                         <h3 class="text-xl font-bold text-navy mb-6 italic underline">Ny Henvisning</h3>
@@ -103,7 +103,7 @@
                                 <select id="target-dept" onchange="filterAdvisors()" class="w-full p-2 border rounded bg-white text-sm font-bold border-navy"><option value="">Vælg Afdeling...</option><option value="Non-Life">Non-Life</option><option value="Pensions">Pensions</option><option value="FOGI">FOGI</option></select>
                                 <select id="advisor-select" class="w-full p-2 border rounded bg-white text-sm"><option value="">Vælg Rådgiver...</option></select>
                                 <textarea id="comment" maxlength="300" placeholder="Besked" class="w-full p-2 border rounded text-xs h-24"></textarea>
-                                <button onclick="sendReferral()" id="send-btn" class="w-full btn-primary py-3 rounded-lg font-bold shadow-lg uppercase text-sm tracking-widest">Send Nu</button>
+                                <button onclick="sendHenvisning()" id="send-btn" class="w-full btn-primary py-3 rounded-lg font-bold shadow-lg uppercase text-sm tracking-widest">Send Nu</button>
                             </div>
                         </div>
                     </div>
@@ -118,7 +118,7 @@
         const EMAILJS_SERVICE_ID = "DIT_SERVICE_ID"; 
         const EMAILJS_TEMPLATE_ID = "DIT_TEMPLATE_ID";
 
-        let referrals = JSON.parse(localStorage.getItem('referrals')) || [];
+        let Henvisnings = JSON.parse(localStorage.getItem('Henvisnings')) || [];
         const mockAdvisors = [
             { name: "Mads Jensen", dept: "Pensions" },
             { name: "Søren Hansen", dept: "Non-Life" },
@@ -172,7 +172,7 @@
             });
         }
 
-        function sendReferral() {
+        function sendHenvisning() {
             const currentUser = JSON.parse(localStorage.getItem('currentUser'));
             const compName = document.getElementById('comp-name').value;
             const advisorName = document.getElementById('advisor-select').value;
@@ -198,7 +198,7 @@
             emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams)
                 .then(function() {
                     alert("Succes! Mail sendt.");
-                    saveReferral(currentUser, compName, advisorName);
+                    saveHenvisning(currentUser, compName, advisorName);
                 }, function(error) {
                     alert("Mail fejl: " + JSON.stringify(error));
                 })
@@ -208,10 +208,10 @@
                 });
         }
 
-        function saveReferral(currentUser, compName, advisorName) {
+        function saveHenvisning(currentUser, compName, advisorName) {
             const newRef = { date: new Date().toLocaleDateString('da-DK'), company: compName, senderName: currentUser.name, from: currentUser.name + " (" + currentUser.dept + ")", receiverName: advisorName, to: advisorName, status: "Sendt" };
-            referrals.push(newRef);
-            localStorage.setItem('referrals', JSON.stringify(referrals));
+            Henvisnings.push(newRef);
+            localStorage.setItem('Henvisnings', JSON.stringify(Henvisnings));
             renderUserTable(currentUser.name);
             initChart(currentUser.name);
             ['cvr-input','comp-name','comp-addr','comp-employees','firm-contact-name','firm-contact-phone','firm-contact-email','comment'].forEach(id => document.getElementById(id).value = "");
@@ -219,14 +219,14 @@
 
         function renderUserTable(name) {
             const tbody = document.getElementById('user-table-body');
-            tbody.innerHTML = referrals.filter(r => r.senderName === name || r.receiverName === name).reverse().map(ref => `
+            tbody.innerHTML = Henvisnings.filter(r => r.senderName === name || r.receiverName === name).reverse().map(ref => `
                 <tr class="border-b text-xs"><td class="p-3 text-gray-400">${ref.date}</td><td class="p-3 font-bold text-navy">${ref.company}</td><td class="p-3">${ref.senderName === name ? 'SENDT' : 'MODTAGET'}</td><td class="p-3 text-xs italic">${ref.to}</td></tr>
             `).join('');
         }
 
         function renderAdminTable() {
             const tbody = document.getElementById('admin-table-body');
-            tbody.innerHTML = referrals.slice().reverse().map(ref => `
+            tbody.innerHTML = Henvisnings.slice().reverse().map(ref => `
                 <tr class="border-b text-xs"><td class="p-3">${ref.date}</td><td class="p-3 font-bold">${ref.company}</td><td class="p-3 italic">${ref.from}</td><td class="p-3 font-semibold text-blue-900">${ref.to}</td></tr>
             `).join('');
         }
@@ -235,9 +235,9 @@
 
         let myChart = null;
         function initChart(name) {
-            const ctx = document.getElementById('referralChart').getContext('2d');
-            const s = referrals.filter(r => r.senderName === name).length;
-            const r = referrals.filter(r => r.receiverName === name).length;
+            const ctx = document.getElementById('HenvisningChart').getContext('2d');
+            const s = Henvisnings.filter(r => r.senderName === name).length;
+            const r = Henvisnings.filter(r => r.receiverName === name).length;
             if(myChart) myChart.destroy();
             myChart = new Chart(ctx, { type: 'doughnut', data: { labels: ['Sendt', 'Modtaget'], datasets: [{ data: [s, r], backgroundColor: ['#002147', '#a68d5d'] }] }, options: { cutout: '75%', plugins: { legend: { position: 'bottom' } } } });
         }
