@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>S&P Henvisnignsportal | User Tracking</title>
+    <title>S&P Referral Portal | Fixed Session</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -24,7 +24,7 @@
         <div class="container mx-auto flex justify-between items-center">
             <div class="flex items-center space-x-2">
                 <div class="w-8 h-8 bg-white rounded-full flex items-center justify-center text-navy font-bold text-xs">S&P</div>
-                <span class="text-xl font-semibold tracking-tight">Henvisnignsportal </span>
+                <span class="text-xl font-semibold tracking-tight">Referral Portal</span>
             </div>
             <div id="user-info" class="hidden flex items-center space-x-4 text-sm">
                 <span id="admin-indicator" class="hidden admin-badge font-bold">Admin</span>
@@ -39,7 +39,7 @@
         <div id="auth-section" class="max-w-md mx-auto card p-8 mt-10">
             <div id="login-view">
                 <h2 class="text-2xl font-bold text-navy mb-2 text-center">Log ind</h2>
-                <p class="text-xs text-gray-400 text-center mb-6 underline cursor-help">Söderberg & Partners Henvisningsportal</p>
+                <p class="text-xs text-gray-400 text-center mb-6 underline cursor-help">Söderberg & Partners Intranet</p>
                 <form onsubmit="handleLogin(event)" class="space-y-4">
                     <input type="email" id="login-email" placeholder="E-mail" required class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-900">
                     <input type="password" id="login-pass" placeholder="Password" required class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-900">
@@ -145,8 +145,7 @@
                                     <th class="px-4 py-3">Status</th>
                                 </tr>
                             </thead>
-                            <tbody id="user-table-body" class="divide-y divide-gray-100">
-                                </tbody>
+                            <tbody id="user-table-body" class="divide-y divide-gray-100"></tbody>
                         </table>
                     </div>
                 </div>
@@ -235,12 +234,13 @@
             });
         }
 
+        // --- RETTET FUNKTION: UNDGÅ LOGUD VED SEND ---
         function sendReferral() {
-            const sender = JSON.parse(localStorage.getItem('currentUser')) || {name: "Ukendt", dept: "N/A"};
+            const currentUser = JSON.parse(localStorage.getItem('currentUser')) || {name: "Gæst", dept: "N/A"};
             const compName = document.getElementById('comp-name').value;
             const advisor = document.getElementById('advisor-select').value;
             
-            if(!compName || !advisor) return alert("Udfyld alt.");
+            if(!compName || !advisor) return alert("Udfyld venligst virksomhed og rådgiver.");
 
             const newRef = {
                 date: new Date().toLocaleDateString('da-DK'),
@@ -250,8 +250,8 @@
                     phone: document.getElementById('firm-contact-phone').value,
                     email: document.getElementById('firm-contact-email').value
                 },
-                senderName: sender.name,
-                from: sender.name + " (" + sender.dept + ")",
+                senderName: currentUser.name,
+                from: currentUser.name + " (" + currentUser.dept + ")",
                 receiverName: advisor,
                 to: advisor + " (" + document.getElementById('target-dept').value + ")",
                 status: "Sendt"
@@ -259,14 +259,27 @@
 
             referrals.push(newRef);
             localStorage.setItem('referrals', JSON.stringify(referrals));
-            alert("Henvisning sendt!");
-            location.reload();
+            
+            alert("Henvisning sendt succesfuldt!");
+
+            // Nulstil formularen i stedet for at reloade siden
+            document.getElementById('cvr-input').value = "";
+            document.getElementById('comp-name').value = "";
+            document.getElementById('comp-addr').value = "";
+            document.getElementById('firm-contact-name').value = "";
+            document.getElementById('firm-contact-phone').value = "";
+            document.getElementById('firm-contact-email').value = "";
+            document.getElementById('comment').value = "";
+
+            // Opdater visningerne øjeblikkeligt uden logud
+            renderUserTable(currentUser.name);
+            if(currentUser.role === 'admin') renderAdminTable();
+            initChart(currentUser.name);
         }
 
         function renderUserTable(currentUserName) {
             const tbody = document.getElementById('user-table-body');
             tbody.innerHTML = "";
-            
             const userRefs = referrals.filter(r => r.senderName === currentUserName || r.receiverName === currentUserName);
 
             userRefs.slice().reverse().forEach(ref => {
@@ -275,13 +288,13 @@
                     <tr class="hover:bg-gray-50 border-b border-gray-50 transition">
                         <td class="px-4 py-3 text-gray-400 text-xs">${ref.date}</td>
                         <td class="px-4 py-3 font-bold text-navy">${ref.company}</td>
-                        <td class="px-4 py-3"><span class="text-[10px] px-2 py-1 rounded font-bold ${isSender ? 'bg-blue-50 text-blue-600' : 'bg-gold/20 text-yellow-800'}">${isSender ? 'SENDT' : 'MODTAGET'}</span></td>
+                        <td class="px-4 py-3"><span class="text-[10px] px-2 py-1 rounded font-bold ${isSender ? 'bg-blue-50 text-blue-600' : 'bg-amber-50 text-amber-700'}">${isSender ? 'SENDT' : 'MODTAGET'}</span></td>
                         <td class="px-4 py-3 text-xs">${isSender ? 'Til: ' + ref.to : 'Fra: ' + ref.from}</td>
-                        <td class="px-4 py-3"><span class="text-green-600 font-bold text-xs uppercase">✓ OK</span></td>
+                        <td class="px-4 py-3 text-green-600 font-bold text-xs uppercase">✓ Sendt</td>
                     </tr>
                 `;
             });
-            if(userRefs.length === 0) tbody.innerHTML = "<tr><td colspan='5' class='p-4 text-center text-gray-400 italic'>Ingen henvisninger fundet endnu.</td></tr>";
+            if(userRefs.length === 0) tbody.innerHTML = "<tr><td colspan='5' class='p-4 text-center text-gray-400 italic font-light'>Ingen data endnu.</td></tr>";
         }
 
         function renderAdminTable() {
@@ -303,12 +316,15 @@
             });
         }
 
+        let myChart = null; // Gem chart reference for at genbruge den
         function initChart(currentUserName) {
             const ctx = document.getElementById('referralChart').getContext('2d');
             const sentCount = referrals.filter(r => r.senderName === currentUserName).length;
             const receivedCount = referrals.filter(r => r.receiverName === currentUserName).length;
 
-            new Chart(ctx, {
+            if(myChart) myChart.destroy(); // Ødelæg gammel graf før ny tegnes
+
+            myChart = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
                     labels: ['Sendt', 'Modtaget'],
