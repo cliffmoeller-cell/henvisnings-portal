@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Henvisningsportalen | S&P Admin</title>
+    <title>Henvisningsportalen | S&P Feedback Loop</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    
     <style>
         :root { --sp-navy: #002147; --sp-gold: #a68d5d; }
         body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
@@ -15,7 +14,11 @@
         .text-navy { color: var(--sp-navy); }
         .btn-primary { background-color: var(--sp-navy); color: white; transition: all 0.2s; }
         .card { background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e5e7eb; }
-        .admin-badge { background-color: #ef4444; color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; text-transform: uppercase; }
+        .status-pill { padding: 2px 8px; border-radius: 9999px; font-size: 10px; font-weight: bold; text-transform: uppercase; }
+        .status-sent { background-color: #e5e7eb; color: #4b5563; }
+        .status-progress { background-color: #fef3c7; color: #92400e; }
+        .status-won { background-color: #d1fae5; color: #065f46; }
+        .status-lost { background-color: #fee2e2; color: #991b1b; }
     </style>
 </head>
 <body>
@@ -26,10 +29,10 @@
                 <div class="w-8 h-8 bg-white rounded-full flex items-center justify-center text-navy font-bold text-xs">S&P</div>
                 <span class="text-xl font-semibold tracking-tight">Henvisningsportalen</span>
             </div>
-            <div id="user-info" class="hidden flex items-center space-x-4 text-sm text-white">
-                <span id="admin-indicator" class="hidden admin-badge font-bold">Admin</span>
-                <span><i class="fas fa-user-circle mr-1"></i> <strong id="display-name"></strong></span>
-                <button onclick="location.reload()" class="bg-white/10 px-3 py-1 rounded hover:bg-white/20 transition text-xs">Log ud</button>
+            <div id="user-info" class="hidden flex items-center space-x-4 text-sm">
+                <span id="admin-indicator" class="hidden bg-red-600 px-2 py-1 rounded text-[10px] font-bold uppercase">Admin</span>
+                <span><i class="fas fa-user-circle mr-1 text-gray-300"></i> <strong id="display-name" class="text-white"></strong></span>
+                <button onclick="location.reload()" class="bg-white/10 px-3 py-1 rounded hover:bg-white/20 transition text-xs text-white">Log ud</button>
             </div>
         </div>
     </nav>
@@ -37,20 +40,20 @@
     <div class="container mx-auto py-8 px-4 max-w-6xl">
         <div id="auth-section" class="max-w-md mx-auto card p-8 mt-10">
             <div id="login-view">
-                <h2 class="text-2xl font-bold text-navy mb-6 text-center">Log ind</h2>
+                <h2 class="text-2xl font-bold text-navy mb-6 text-center italic underline">Log ind</h2>
                 <form onsubmit="handleLogin(event)" class="space-y-4">
-                    <input type="email" id="login-email" placeholder="E-mail" required class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-900 text-sm">
-                    <input type="password" id="login-pass" placeholder="Password" required class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-900 text-sm">
+                    <input type="email" id="login-email" placeholder="E-mail" required class="w-full p-3 border rounded outline-none text-sm">
+                    <input type="password" id="login-pass" placeholder="Password" required class="w-full p-3 border rounded outline-none text-sm">
                     <button type="submit" class="w-full btn-primary py-3 rounded-lg font-bold">Log ind</button>
                 </form>
-                <p class="mt-6 text-center text-sm text-gray-600">Har du ikke en konto? <a href="#" onclick="toggleAuth(false)" class="text-blue-900 font-bold underline">Opret dig her</a></p>
+                <p class="mt-6 text-center text-sm text-gray-600 italic underline">Har du ikke en konto? <a href="#" onclick="toggleAuth(false)" class="text-blue-900 font-bold">Opret dig her</a></p>
             </div>
             <div id="register-view" class="hidden">
                 <h2 class="text-2xl font-bold text-navy mb-6 text-center">Opret Profil</h2>
                 <form onsubmit="handleRegister(event)" class="space-y-4">
-                    <input type="text" id="reg-name" placeholder="Fornavn og Efternavn" required class="w-full p-2 border rounded text-sm">
+                    <input type="text" id="reg-name" placeholder="Fulde Navn" required class="w-full p-2 border rounded text-sm">
                     <input type="email" id="reg-email" placeholder="E-mail" required class="w-full p-2 border rounded text-sm">
-                    <input type="password" id="reg-pass" placeholder="Vælg Password" required class="w-full p-2 border rounded text-sm">
+                    <input type="password" id="reg-pass" placeholder="Password" required class="w-full p-2 border rounded text-sm">
                     <select id="reg-dept" class="w-full p-2 border rounded bg-white text-sm">
                         <option value="Non-Life">Non-Life</option>
                         <option value="Pensions">Pensions</option>
@@ -58,100 +61,68 @@
                     </select>
                     <button type="submit" class="w-full btn-primary py-3 rounded-lg font-bold">Opret Bruger</button>
                 </form>
-                <p class="mt-4 text-center text-xs underline cursor-pointer" onclick="toggleAuth(true)">Tilbage til login</p>
+                <p class="mt-4 text-center text-xs underline cursor-pointer" onclick="toggleAuth(true)">Tilbage</p>
             </div>
         </div>
 
         <div id="dashboard-section" class="hidden space-y-6">
-            
             <div id="admin-view" class="hidden space-y-6">
-                <h2 class="text-2xl font-bold text-navy italic"><i class="fas fa-chart-line mr-2"></i>Admin Kontrolpanel</h2>
-                
-                <div class="grid md:grid-cols-3 gap-4">
-                    <div class="card p-4">
-                        <h4 class="text-center text-[10px] font-bold text-gray-400 uppercase mb-2">Non-Life (Total)</h4>
-                        <canvas id="chart-nonlife" height="150"></canvas>
-                    </div>
-                    <div class="card p-4">
-                        <h4 class="text-center text-[10px] font-bold text-gray-400 uppercase mb-2">Pensions (Total)</h4>
-                        <canvas id="chart-pensions" height="150"></canvas>
-                    </div>
-                    <div class="card p-4">
-                        <h4 class="text-center text-[10px] font-bold text-gray-400 uppercase mb-2">FOGI (Total)</h4>
-                        <canvas id="chart-fogi" height="150"></canvas>
-                    </div>
+                <div class="flex justify-between items-end">
+                    <h2 class="text-2xl font-bold text-navy italic"><i class="fas fa-shield-alt mr-2"></i>Admin Dashboard</h2>
+                    <button onclick="resetReferrals()" class="bg-red-600 text-white px-4 py-2 rounded text-[10px] font-bold uppercase hover:bg-red-700 transition shadow-sm">
+                        <i class="fas fa-trash-alt mr-2"></i>Ryd alle henvisninger
+                    </button>
                 </div>
-
+                <div class="grid md:grid-cols-3 gap-4">
+                    <div class="card p-4"><h4 class="text-center text-[10px] font-bold text-gray-400 uppercase">Non-Life</h4><canvas id="chart-nonlife" height="150"></canvas></div>
+                    <div class="card p-4"><h4 class="text-center text-[10px] font-bold text-gray-400 uppercase">Pensions</h4><canvas id="chart-pensions" height="150"></canvas></div>
+                    <div class="card p-4"><h4 class="text-center text-[10px] font-bold text-gray-400 uppercase">FOGI</h4><canvas id="chart-fogi" height="150"></canvas></div>
+                </div>
                 <div class="card overflow-hidden">
-                    <div class="bg-gray-50 p-3 border-b border-gray-100 flex justify-between items-center">
-                        <span class="text-sm font-bold text-navy uppercase tracking-wider">Komplet Henvisningsliste</span>
-                        <span id="total-ref-count" class="text-xs font-bold text-gray-400 italic">0 Henvisninger</span>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm">
-                            <thead class="bg-white text-gray-400 uppercase text-[9px]">
-                                <tr>
-                                    <th class="px-4 py-2 border-b">Dato</th>
-                                    <th class="px-4 py-2 border-b">Kunde</th>
-                                    <th class="px-4 py-2 border-b">Fra Afdeling</th>
-                                    <th class="px-4 py-2 border-b">Til Afdeling</th>
-                                    <th class="px-4 py-2 border-b">Rådgiver</th>
-                                </tr>
-                            </thead>
-                            <tbody id="admin-table-body" class="divide-y divide-gray-50 italic"></tbody>
-                        </table>
-                    </div>
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-gray-50 text-[9px] uppercase"><tr><th class="p-4">Dato</th><th class="p-4">Kunde</th><th class="p-4">Fra</th><th class="p-4">Til</th><th class="p-4">Status</th></tr></thead>
+                        <tbody id="admin-table-body" class="divide-y divide-gray-50"></tbody>
+                    </table>
                 </div>
             </div>
 
             <div id="user-view" class="space-y-6">
                 <div class="grid md:grid-cols-3 gap-6">
-                    <div class="card p-6 text-center">
-                        <h3 class="text-gray-400 text-[10px] font-bold uppercase mb-4 tracking-widest text-navy">Din Aktivitet</h3>
-                        <canvas id="referralChart" height="250"></canvas>
-                    </div>
-                    
+                    <div class="card p-6 text-center"><canvas id="referralChart" height="250"></canvas></div>
                     <div class="md:col-span-2 card p-8">
-                        <h3 class="text-xl font-bold text-navy mb-6 italic underline">Ny Henvisning</h3>
-                        <div class="grid md:grid-cols-2 gap-8">
-                            <div class="space-y-4 text-sm">
-                                <label class="block font-bold text-gray-400 uppercase text-[10px]">Virksomhedsdata (CVR)</label>
-                                <div class="flex">
-                                    <input type="text" id="cvr-input" maxlength="8" placeholder="CVR nr..." class="w-full p-2 border rounded-l focus:border-navy outline-none border-gray-300">
-                                    <button onclick="lookupCVR()" class="bg-navy text-white px-4 rounded-r font-bold uppercase text-xs">Søg</button>
-                                </div>
-                                <input type="text" id="comp-name" placeholder="Firmanavn" class="w-full p-2 border rounded bg-gray-50 font-bold text-navy border-gray-200 text-xs" readonly>
-                                <input type="text" id="comp-addr" placeholder="Adresse" class="w-full p-2 border rounded bg-gray-50 text-[10px] text-gray-600 border-gray-200" readonly>
-                                <div class="bg-blue-50 p-2 rounded border border-blue-200">
-                                    <input type="text" id="comp-employees" placeholder="Antal Ansatte" class="w-full bg-transparent font-semibold text-navy outline-none border-none text-[10px] p-0" readonly>
-                                </div>
-                                <div class="pt-2 border-t border-gray-100 space-y-2">
-                                    <input type="text" id="firm-contact-name" placeholder="Kontakt Navn" class="w-full p-2 border rounded text-[10px] border-gray-300">
-                                    <input type="tel" id="firm-contact-phone" placeholder="Telefon" class="w-full p-2 border rounded text-[10px] border-gray-300">
-                                    <input type="email" id="firm-contact-email" placeholder="E-mail" class="w-full p-2 border rounded text-[10px] border-gray-300">
+                        <div class="grid md:grid-cols-2 gap-8 text-sm">
+                            <div class="space-y-4">
+                                <label class="block font-bold text-gray-400 uppercase text-[10px]">Virksomhedsdata</label>
+                                <div class="flex"><input type="text" id="cvr-input" maxlength="8" placeholder="CVR nr..." class="w-full p-2 border rounded-l outline-none border-gray-300"><button onclick="lookupCVR()" class="bg-navy text-white px-4 rounded-r font-bold text-xs uppercase">Søg</button></div>
+                                <input type="text" id="comp-name" placeholder="Navn" class="w-full p-2 border rounded bg-gray-50 font-bold" readonly>
+                                <input type="text" id="comp-employees" placeholder="Antal ansatte" class="w-full p-2 border rounded bg-blue-50 text-[10px]" readonly>
+                                <div class="pt-2 border-t space-y-2">
+                                    <input type="text" id="firm-contact-name" placeholder="Kontakt Navn" class="w-full p-2 border rounded text-[10px]">
+                                    <input type="tel" id="firm-contact-phone" placeholder="Telefon" class="w-full p-2 border rounded text-[10px]">
+                                    <input type="email" id="firm-contact-email" placeholder="E-mail" class="w-full p-2 border rounded text-[10px]">
                                 </div>
                             </div>
-
                             <div class="space-y-3">
-                                <label class="block font-bold text-gray-400 uppercase text-[10px]">Modtager af henvisning</label>
-                                <select id="target-dept" onchange="filterAdvisors()" class="w-full p-2 border rounded bg-white text-sm font-bold border-navy text-navy">
-                                    <option value="">Vælg Afdeling...</option>
-                                    <option value="Non-Life">Non-Life</option>
-                                    <option value="Pensions">Pensions</option>
-                                    <option value="FOGI">FOGI</option>
-                                </select>
-                                <select id="advisor-select" class="w-full p-2 border rounded bg-white text-sm text-navy border-gray-300">
-                                    <option value="">Vælg Rådgiver...</option>
-                                </select>
-                                <textarea id="comment" maxlength="300" placeholder="Yderligere besked..." class="w-full p-2 border rounded text-[10px] h-20 border-gray-300"></textarea>
+                                <label class="block font-bold text-gray-400 uppercase text-[10px]">Modtager</label>
+                                <select id="target-dept" onchange="filterAdvisors()" class="w-full p-2 border rounded font-bold border-navy text-navy"><option value="">Vælg Afdeling...</option><option value="Non-Life">Non-Life</option><option value="Pensions">Pensions</option><option value="FOGI">FOGI</option></select>
+                                <select id="advisor-select" class="w-full p-2 border rounded text-navy"><option value="">Vælg Rådgiver...</option></select>
+                                <textarea id="comment" maxlength="300" placeholder="Besked..." class="w-full p-2 border rounded text-[10px] h-20"></textarea>
                                 <button onclick="sendReferral()" class="w-full btn-primary py-3 rounded-lg font-bold shadow-lg uppercase text-xs tracking-widest">Send Henvisning</button>
                             </div>
                         </div>
                     </div>
                 </div>
+                
                 <div class="card p-6">
-                    <h3 class="text-lg font-bold text-navy mb-4 italic text-sm underline tracking-tight">Dine Henvisninger</h3>
-                    <table class="w-full text-left text-xs"><tbody id="user-table-body"></tbody></table>
+                    <h3 class="text-lg font-bold text-navy mb-4 italic underline">Dine Sager & Opfølgning</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-gray-50 text-gray-400 uppercase text-[9px]">
+                                <tr><th class="p-3">Dato</th><th class="p-3">Kunde</th><th class="p-3">Modpart</th><th class="p-3 text-center">Rolle</th><th class="p-3 text-center">Status (Feedback Loop)</th></tr>
+                            </thead>
+                            <tbody id="user-table-body" class="divide-y divide-gray-50"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -161,39 +132,22 @@
         let users = JSON.parse(localStorage.getItem('sp_users')) || [];
         let referrals = JSON.parse(localStorage.getItem('referrals')) || [];
         let currentUser = null;
-        let adminCharts = {};
 
-        function toggleAuth(show) {
-            document.getElementById('login-view').classList.toggle('hidden', !show);
-            document.getElementById('register-view').classList.toggle('hidden', show);
-        }
-
+        function toggleAuth(show) { document.getElementById('login-view').classList.toggle('hidden', !show); document.getElementById('register-view').classList.toggle('hidden', show); }
+        
         function handleRegister(e) {
             e.preventDefault();
-            const newUser = {
-                name: document.getElementById('reg-name').value,
-                email: document.getElementById('reg-email').value,
-                pass: document.getElementById('reg-pass').value,
-                dept: document.getElementById('reg-dept').value
-            };
-            if (users.find(u => u.email === newUser.email)) return alert("E-mail findes allerede.");
-            users.push(newUser);
-            localStorage.setItem('sp_users', JSON.stringify(users));
-            alert("Profil oprettet!");
-            toggleAuth(true);
+            const newUser = { name: document.getElementById('reg-name').value, email: document.getElementById('reg-email').value, pass: document.getElementById('reg-pass').value, dept: document.getElementById('reg-dept').value };
+            users.push(newUser); localStorage.setItem('sp_users', JSON.stringify(users)); alert("Bruger oprettet!"); toggleAuth(true);
         }
 
         function handleLogin(e) {
             e.preventDefault();
             const email = document.getElementById('login-email').value;
             const pass = document.getElementById('login-pass').value;
-            if(email === "admin@sp.dk" && pass === "admin123") {
-                currentUser = { name: "System Admin", role: "admin" };
-                loginSuccess(currentUser);
-                return;
-            }
+            if(email === "admin@sp.dk" && pass === "admin123") { currentUser = { name: "Admin", role: "admin" }; loginSuccess(currentUser); return; }
             const user = users.find(u => u.email === email && u.pass === pass);
-            if (user) { currentUser = user; loginSuccess(user); } else { alert("Fejl!"); }
+            if (user) { currentUser = user; loginSuccess(user); } else alert("Forkert login!");
         }
 
         function loginSuccess(user) {
@@ -201,13 +155,8 @@
             document.getElementById('dashboard-section').classList.remove('hidden');
             document.getElementById('user-info').classList.remove('hidden');
             document.getElementById('display-name').innerText = user.name;
-            if(user.role === 'admin') {
-                document.getElementById('admin-indicator').classList.remove('hidden');
-                document.getElementById('admin-view').classList.remove('hidden');
-                renderAdminView();
-            }
-            renderUserTable(user.name); 
-            initChart(user.name);
+            if(user.role === 'admin') { document.getElementById('admin-indicator').classList.remove('hidden'); document.getElementById('admin-view').classList.remove('hidden'); renderAdminView(); }
+            renderUserTable(user.name); initChart(user.name);
         }
 
         async function lookupCVR() {
@@ -216,99 +165,110 @@
                 const response = await fetch(`https://cvrapi.dk/api?search=${cvr}&country=dk`);
                 const data = await response.json();
                 document.getElementById('comp-name').value = data.name;
-                document.getElementById('comp-addr').value = data.address + ", " + data.zipcode + " " + data.city;
-                document.getElementById('comp-employees').value = data.employees ? data.employees + " ansatte" : "Ukendt";
-            } catch (e) { alert("CVR fejl"); }
+                document.getElementById('comp-employees').value = (data.employees || "0") + " ansatte";
+            } catch (e) { alert("CVR Fejl"); }
         }
 
         function filterAdvisors() {
-            const targetDept = document.getElementById('target-dept').value;
+            const target = document.getElementById('target-dept').value;
             const select = document.getElementById('advisor-select');
             select.innerHTML = '<option value="">Vælg Rådgiver...</option>';
-            users.filter(u => u.dept === targetDept).forEach(user => {
-                let opt = document.createElement('option'); opt.value = user.name; opt.innerHTML = user.name; select.appendChild(opt);
+            users.filter(u => u.dept === target).forEach(u => {
+                let opt = document.createElement('option'); opt.value = u.name; opt.innerHTML = u.name; select.appendChild(opt);
             });
         }
 
         function sendReferral() {
-            const compName = document.getElementById('comp-name').value;
-            const advisorName = document.getElementById('advisor-select').value;
-            if(!compName || !advisorName) return alert("Mangler data.");
-            const newRef = {
-                date: new Date().toLocaleDateString('da-DK'),
-                company: compName,
-                senderName: currentUser.name,
-                fromDept: currentUser.dept || "Admin",
-                receiverName: advisorName,
+            const comp = document.getElementById('comp-name').value;
+            const adv = document.getElementById('advisor-select').value;
+            if(!comp || !adv) return alert("Mangler data.");
+            const newRef = { 
+                id: Date.now(),
+                date: new Date().toLocaleDateString('da-DK'), 
+                company: comp, 
+                senderName: currentUser.name, 
+                fromDept: currentUser.dept || "Admin", 
+                receiverName: adv, 
                 targetDept: document.getElementById('target-dept').value,
-                status: "Sendt"
+                status: "Sendt" 
             };
-            referrals.push(newRef);
-            localStorage.setItem('referrals', JSON.stringify(referrals));
-            alert("Sendt!");
-            location.reload();
+            referrals.push(newRef); localStorage.setItem('referrals', JSON.stringify(referrals));
+            alert("Henvisning sendt!"); location.reload();
         }
 
-        function renderUserTable(userName) {
+        // FEEDBACK LOOP: Opdater status på en henvisning
+        function updateStatus(refId, newStatus) {
+            const idx = referrals.findIndex(r => r.id === refId);
+            if (idx !== -1) {
+                referrals[idx].status = newStatus;
+                localStorage.setItem('referrals', JSON.stringify(referrals));
+                renderUserTable(currentUser.name);
+                if (currentUser.role === 'admin') renderAdminView();
+            }
+        }
+
+        function resetReferrals() {
+            if(confirm("Vil du slette alle henvisninger permanent?")) { localStorage.setItem('referrals', JSON.stringify([])); location.reload(); }
+        }
+
+        function getStatusClass(status) {
+            if (status === "Sendt") return "status-sent";
+            if (status === "I gang") return "status-progress";
+            if (status === "Vundet") return "status-won";
+            if (status === "Tabt") return "status-lost";
+            return "";
+        }
+
+        function renderUserTable(name) {
             const tbody = document.getElementById('user-table-body');
-            const myData = referrals.filter(r => r.senderName === userName || r.receiverName === userName);
-            tbody.innerHTML = myData.reverse().map(ref => `
-                <tr class="border-b"><td class="p-3 text-gray-400">${ref.date}</td><td class="p-3 font-bold text-navy">${ref.company}</td><td class="p-3">${ref.senderName === userName ? 'SENDT' : 'MODTAGET'}</td><td class="p-3 italic text-gray-400">Til: ${ref.receiverName}</td></tr>
-            `).join('');
+            const myData = referrals.filter(r => r.senderName === name || r.receiverName === name);
+            tbody.innerHTML = myData.reverse().map(ref => {
+                const isReceiver = ref.receiverName === name;
+                return `
+                <tr class="border-b">
+                    <td class="p-3 text-gray-400">${ref.date}</td>
+                    <td class="p-3 font-bold text-navy">${ref.company}</td>
+                    <td class="p-3 italic text-gray-500">${isReceiver ? 'Fra: ' + ref.senderName : 'Til: ' + ref.receiverName}</td>
+                    <td class="p-3 text-center"><span class="text-[9px] px-2 py-1 rounded font-bold ${isReceiver ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}">${isReceiver ? 'MODTAGER' : 'AFSENDER'}</span></td>
+                    <td class="p-3 text-center">
+                        ${isReceiver ? `
+                            <select onchange="updateStatus(${ref.id}, this.value)" class="text-[9px] border rounded p-1 ${getStatusClass(ref.status)}">
+                                <option value="Sendt" ${ref.status === 'Sendt' ? 'selected' : ''}>Sendt</option>
+                                <option value="I gang" ${ref.status === 'I gang' ? 'selected' : ''}>I gang</option>
+                                <option value="Vundet" ${ref.status === 'Vundet' ? 'selected' : ''}>Vundet</option>
+                                <option value="Tabt" ${ref.status === 'Tabt' ? 'selected' : ''}>Tabt</option>
+                            </select>
+                        ` : `<span class="status-pill ${getStatusClass(ref.status)}">${ref.status}</span>`}
+                    </td>
+                </tr>`;
+            }).join('');
         }
 
         function renderAdminView() {
             const tbody = document.getElementById('admin-table-body');
-            document.getElementById('total-ref-count').innerText = referrals.length + " Henvisninger Total";
             tbody.innerHTML = referrals.slice().reverse().map(ref => `
-                <tr class="border-b">
-                    <td class="px-4 py-3">${ref.date}</td>
-                    <td class="px-4 py-3 font-bold text-navy">${ref.company}</td>
-                    <td class="px-4 py-3">${ref.fromDept}</td>
-                    <td class="px-4 py-3">${ref.targetDept}</td>
-                    <td class="px-4 py-3 font-semibold">${ref.receiverName}</td>
-                </tr>
+                <tr class="border-b"><td class="p-4 text-xs">${ref.date}</td><td class="p-4 font-bold text-navy">${ref.company}</td><td class="p-4">${ref.fromDept}</td><td class="p-4">${ref.targetDept}</td><td class="p-4"><span class="status-pill ${getStatusClass(ref.status)}">${ref.status}</span></td></tr>
             `).join('');
             initAdminCharts();
         }
 
         function initAdminCharts() {
-            const depts = ['Non-Life', 'Pensions', 'FOGI'];
-            depts.forEach(dept => {
-                const ctx = document.getElementById(`chart-${dept.toLowerCase().replace('-','')}`).getContext('2d');
-                const sent = referrals.filter(r => r.fromDept === dept).length;
-                const received = referrals.filter(r => r.targetDept === dept).length;
-                
-                new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: ['Fra', 'Til'],
-                        datasets: [{
-                            data: [sent, received],
-                            backgroundColor: ['#002147', '#a68d5d'],
-                            borderRadius: 4
-                        }]
-                    },
-                    options: { 
-                        indexAxis: 'y', 
-                        plugins: { legend: { display: false } },
-                        scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } }
-                    }
-                });
+            ['nonlife', 'pensions', 'fogi'].forEach(id => {
+                const canvas = document.getElementById(`chart-${id}`);
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+                const dept = id === 'nonlife' ? 'Non-Life' : id.charAt(0).toUpperCase() + id.slice(1);
+                const s = referrals.filter(r => r.fromDept === dept).length;
+                const r = referrals.filter(r => r.targetDept === dept).length;
+                new Chart(ctx, { type: 'bar', data: { labels: ['Fra', 'Til'], datasets: [{ data: [s, r], backgroundColor: ['#002147', '#a68d5d'] }] }, options: { indexAxis: 'y', plugins: { legend: false }, scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } } } });
             });
         }
 
-        let userChart = null;
-        function initChart(userName) {
+        function initChart(name) {
             const ctx = document.getElementById('referralChart').getContext('2d');
-            const s = referrals.filter(r => r.senderName === userName).length;
-            const r = referrals.filter(r => r.receiverName === userName).length;
-            if(userChart) userChart.destroy();
-            userChart = new Chart(ctx, { 
-                type: 'doughnut', 
-                data: { labels: ['S', 'M'], datasets: [{ data: [s, r], backgroundColor: ['#002147', '#a68d5d'] }] }, 
-                options: { cutout: '80%', plugins: { legend: { position: 'bottom' } } } 
-            });
+            const s = referrals.filter(r => r.senderName === name).length;
+            const r = referrals.filter(r => r.receiverName === name).length;
+            new Chart(ctx, { type: 'doughnut', data: { labels: ['S', 'M'], datasets: [{ data: [s, r], backgroundColor: ['#002147', '#a68d5d'] }] }, options: { cutout: '80%', plugins: { legend: { position: 'bottom' } } } });
         }
     </script>
 </body>
