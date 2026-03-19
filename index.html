@@ -1,1 +1,183 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S&P Referral Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root { --sp-navy: #002147; }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .bg-navy { background-color: var(--sp-navy); }
+        .text-navy { color: var(--sp-navy); }
+        .btn-primary { background-color: var(--sp-navy); color: white; transition: all 0.2s; }
+        .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+    </style>
+</head>
+<body>
 
+    <nav class="bg-navy text-white p-4 shadow-lg">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <div class="w-8 h-8 bg-white rounded-full flex items-center justify-center text-navy font-bold text-xs">S&P</div>
+                <span class="text-xl font-semibold tracking-tight">Referral Portal</span>
+            </div>
+            <div id="user-info" class="hidden flex items-center space-x-4 text-sm">
+                <span>Bruger: <strong id="display-name"></strong> (<span id="display-dept"></span>)</span>
+                <button onclick="location.reload()" class="underline opacity-70">Log ud</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto py-8 px-4 max-w-6xl">
+        
+        <div id="auth-section" class="max-w-md mx-auto bg-white p-8 rounded-xl shadow-xl border border-gray-100">
+            <h2 class="text-2xl font-bold text-navy mb-6 text-center">Velkommen</h2>
+            <form onsubmit="handleRegister(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Dit Navn</label>
+                    <input type="text" id="reg-name" required class="w-full p-2 border rounded mt-1 outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Din Afdeling</label>
+                    <select id="reg-dept" class="w-full p-2 border rounded mt-1 bg-white">
+                        <option value="Non-Life">Non-Life</option>
+                        <option value="Pensions">Pensions</option>
+                        <option value="FOGI">FOGI</option>
+                    </select>
+                </div>
+                <button type="submit" class="w-full btn-primary py-3 rounded-lg font-bold mt-4">Log ind i Portalen</button>
+            </form>
+        </div>
+
+        <div id="dashboard-section" class="hidden space-y-8 animate-fade-in">
+            <div class="grid md:grid-cols-3 gap-6">
+                
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <h3 class="text-gray-400 text-xs font-bold uppercase mb-4 text-center">Henvisningsstatistik</h3>
+                    <canvas id="referralChart" height="250"></canvas>
+                </div>
+                
+                <div class="md:col-span-2 bg-white p-8 rounded-xl shadow-sm border border-gray-100">
+                    <h3 class="text-xl font-bold text-navy mb-6"><i class="fas fa-plus-circle mr-2"></i>Ny Henvisning</h3>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase">Søg CVR</label>
+                                <div class="flex mt-1">
+                                    <input type="text" id="cvr-input" maxlength="8" placeholder="Indtast 8 cifre..." class="w-full p-2 border rounded-l outline-none focus:border-navy">
+                                    <button onclick="lookupCVR()" class="bg-gray-800 text-white px-4 rounded-r hover:bg-black transition text-sm">Søg</button>
+                                </div>
+                                <p id="cvr-status" class="text-[10px] mt-1 text-gray-400 italic">Data valideres mod Virk.dk</p>
+                            </div>
+                            <input type="text" id="comp-name" placeholder="Firmanavn" class="w-full p-2 border rounded bg-gray-50 text-sm" readonly>
+                            <input type="text" id="comp-addr" placeholder="Adresse" class="w-full p-2 border rounded bg-gray-50 text-sm" readonly>
+                            <div class="grid grid-cols-2 gap-2">
+                                <input type="text" id="comp-db" placeholder="Branchekode" class="p-2 border rounded bg-gray-50 text-xs" readonly>
+                                <input type="text" id="comp-emp" placeholder="Ansatte" class="p-2 border rounded bg-gray-50 text-xs" readonly>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4">
+                            <input type="text" id="contact-person" placeholder="Kontaktperson Navn" class="w-full p-2 border rounded text-sm outline-none focus:border-navy">
+                            <div class="grid grid-cols-2 gap-2">
+                                <input type="email" id="contact-email" placeholder="E-mail" class="p-2 border rounded text-sm">
+                                <input type="tel" id="contact-phone" placeholder="Telefon" class="p-2 border rounded text-sm">
+                            </div>
+                            
+                            <select id="target-dept" onchange="filterAdvisors()" class="w-full p-2 border rounded text-sm bg-white font-bold text-navy border-navy">
+                                <option value="">Vælg Modtager Afdeling...</option>
+                                <option value="Non-Life">Non-Life</option>
+                                <option value="Pensions">Pensions</option>
+                                <option value="FOGI">FOGI</option>
+                            </select>
+
+                            <select id="advisor-select" class="w-full p-2 border rounded text-sm bg-white border-dashed">
+                                <option value="">Vælg Rådgiver...</option>
+                            </select>
+
+                            <textarea id="comment" maxlength="300" placeholder="Yderligere info (max 300 tegn)..." class="w-full p-2 border rounded text-sm h-16"></textarea>
+                            
+                            <button onclick="sendReferral()" class="w-full btn-primary py-3 rounded-lg font-bold shadow-md">Send Henvisning</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const mockAdvisors = [
+            { name: "Mads Jensen", dept: "Pensions" },
+            { name: "Søren Hansen", dept: "Non-Life" },
+            { name: "Birgitte Berg", dept: "FOGI" }
+        ];
+
+        function handleRegister(e) {
+            e.preventDefault();
+            document.getElementById('auth-section').classList.add('hidden');
+            document.getElementById('dashboard-section').classList.remove('hidden');
+            document.getElementById('user-info').classList.remove('hidden');
+            document.getElementById('display-name').innerText = document.getElementById('reg-name').value;
+            document.getElementById('display-dept').innerText = document.getElementById('reg-dept').value;
+            initChart();
+        }
+
+        async function lookupCVR() {
+            const cvr = document.getElementById('cvr-input').value;
+            const status = document.getElementById('cvr-status');
+            if(cvr.length !== 8) return alert("Indtast 8 cifre");
+
+            status.innerText = "Søger i register...";
+            
+            try {
+                // Her bruger vi en public CVR API (Bemærk: CORS kan forekomme i produktion, men her er en demo-løsning)
+                const response = await fetch(`https://cvrapi.dk/api?search=${cvr}&country=dk`);
+                const data = await response.json();
+                
+                if(data.error) {
+                    status.innerText = "Ingen virksomhed fundet.";
+                    return;
+                }
+
+                document.getElementById('comp-name').value = data.name;
+                document.getElementById('comp-addr').value = data.address + ", " + data.zipcode + " " + data.city;
+                document.getElementById('comp-db').value = "Branche: " + data.industrycode;
+                document.getElementById('comp-emp').value = data.employees + " ansatte";
+                status.innerText = "Virksomhed fundet!";
+            } catch (error) {
+                status.innerText = "Fejl ved opslag. Prøv igen.";
+            }
+        }
+
+        function filterAdvisors() {
+            const target = document.getElementById('target-dept').value;
+            const select = document.getElementById('advisor-select');
+            select.innerHTML = '<option value="">Vælg Rådgiver...</option>';
+            mockAdvisors.filter(a => a.dept === target).forEach(adv => {
+                let opt = document.createElement('option');
+                opt.value = adv.name; opt.innerHTML = adv.name;
+                select.appendChild(opt);
+            });
+        }
+
+        function sendReferral() {
+            alert("SUCCESS!\n\nHenvisning er oprettet.\nMail sendt til rådgiver.\nKvittering sendt til din mail.");
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('referralChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Sendt', 'Modtaget'],
+                    datasets: [{ data: [8, 3], backgroundColor: ['#002147', '#a68d5d'] }]
+                },
+                options: { plugins: { legend: { position: 'bottom' } } }
+            });
+        }
+    </script>
+</body>
+</html>
