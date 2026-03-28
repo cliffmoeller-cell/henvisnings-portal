@@ -6,7 +6,6 @@
     <title>Henvisningsportalen | sp-henvisning.dk</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         :root { --sp-navy: #002147; --sp-gold: #a68d5d; }
@@ -37,7 +36,7 @@
             <div id="login-view">
                 <h2 class="text-2xl font-bold text-navy mb-6 text-center italic underline">Log ind</h2>
                 <form onsubmit="handleLogin(event)" class="space-y-4">
-                    <input type="email" id="login-email" placeholder="E-mail" required class="w-full p-3 border rounded text-sm outline-none">
+                    <input type="email" id="login-email" placeholder="Din arbejds e-mail" required class="w-full p-3 border rounded text-sm outline-none">
                     <input type="password" id="login-pass" placeholder="Password" required class="w-full p-3 border rounded text-sm outline-none">
                     <button type="submit" id="login-btn" class="w-full btn-primary py-3 rounded-lg font-bold">Log ind</button>
                 </form>
@@ -50,7 +49,7 @@
                 <h2 class="text-2xl font-bold text-navy mb-6 text-center">Opret Profil</h2>
                 <form onsubmit="handleRegister(event)" class="space-y-4">
                     <input type="text" id="reg-name" placeholder="Fornavn og Efternavn" required class="w-full p-2 border rounded text-sm">
-                    <input type="email" id="reg-email" placeholder="Din E-mail" required class="w-full p-2 border rounded text-sm">
+                    <input type="email" id="reg-email" placeholder="E-mail" required class="w-full p-2 border rounded text-sm">
                     <input type="password" id="reg-pass" placeholder="Vælg Password" required class="w-full p-2 border rounded text-sm">
                     <select id="reg-dept" class="w-full p-2 border rounded bg-white text-sm">
                         <option value="Non-Life">Non-Life</option>
@@ -75,28 +74,28 @@
                         <div class="grid md:grid-cols-2 gap-8 text-sm">
                             <div class="space-y-4">
                                 <label class="block font-bold text-gray-400 uppercase text-[10px]">Virksomhedsdata</label>
-                                <div class="flex"><input type="text" id="cvr-input" maxlength="8" placeholder="Indtast CVR nr..." class="w-full p-2 border rounded-l outline-none border-gray-300"><button onclick="lookupCVR()" class="bg-navy text-white px-4 rounded-r font-bold text-xs uppercase">Søg</button></div>
+                                <div class="flex"><input type="text" id="cvr-input" maxlength="8" placeholder="Indtast CVR..." class="w-full p-2 border rounded-l outline-none border-gray-300"><button onclick="lookupCVR()" class="bg-navy text-white px-4 rounded-r font-bold text-xs uppercase">Søg</button></div>
                                 <input type="text" id="comp-name" placeholder="Navn" class="w-full p-2 border rounded bg-gray-50 font-bold" readonly>
                                 <input type="text" id="comp-employees" placeholder="Antal Ansatte" class="w-full p-2 border rounded bg-blue-50 text-[10px]" readonly>
                                 <div class="pt-2 border-t border-gray-100 space-y-2">
-                                    <label class="block font-bold text-gray-400 uppercase text-[10px]">Kontaktperson hos kunden</label>
+                                    <label class="block font-bold text-gray-400 uppercase text-[10px]">Kontakt hos kunden</label>
                                     <input type="text" id="contact-name" placeholder="Navn" class="w-full p-2 border rounded text-[10px]">
                                     <input type="tel" id="contact-phone" placeholder="Telefon" class="w-full p-2 border rounded text-[10px]">
                                     <input type="email" id="contact-email" placeholder="E-mail" class="w-full p-2 border rounded text-[10px]">
                                 </div>
                             </div>
                             <div class="space-y-3">
-                                <label class="block font-bold text-gray-400 uppercase text-[10px]">Modtager af henvisning</label>
+                                <label class="block font-bold text-gray-400 uppercase text-[10px]">Vælg Modtager</label>
                                 <select id="target-dept" onchange="filterAdvisors()" class="w-full p-2 border rounded font-bold border-navy text-navy"><option value="">Vælg Afdeling...</option><option value="Non-Life">Non-Life</option><option value="Pensions">Pensions</option><option value="FOGI">FOGI</option></select>
                                 <select id="advisor-select" class="w-full p-2 border rounded text-navy border-gray-300"><option value="">Vælg Rådgiver...</option></select>
-                                <textarea id="comment" placeholder="Kort besked eller note..." class="w-full p-2 border rounded h-20 text-[10px]"></textarea>
+                                <textarea id="comment" placeholder="Besked/Note..." class="w-full p-2 border rounded h-20 text-[10px]"></textarea>
                                 <button onclick="sendReferral()" id="send-btn" class="w-full btn-primary py-3 rounded-lg font-bold shadow-lg uppercase text-xs tracking-widest">Send Henvisning</button>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="card p-6">
-                    <h3 class="text-lg font-bold text-navy mb-4 italic underline text-sm">Dine Henvisninger</h3>
+                    <h3 class="text-lg font-bold text-navy mb-4 italic underline text-sm">Dine Seneste Henvisninger</h3>
                     <table class="w-full text-left text-xs"><tbody id="user-table-body"></tbody></table>
                 </div>
             </div>
@@ -104,14 +103,7 @@
     </div>
 
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxlrjJp8I3MItotSUCUMagOWU85xTpD1_fxTjhyDh28tOgeVWA6PMYUrdMD5BCLehBx/exec";
-        const EMAILJS_PUBLIC_KEY = "GhSoP7srq__KYtOsO";
-        const EMAILJS_SERVICE_ID = "service_h3qwo3g";
-        const TEMPLATE_ADVISOR = "template_onscdrx"; 
-        const TEMPLATE_RECEIPT = "template_2ai8tbb"; 
-
-        (function() { emailjs.init(EMAILJS_PUBLIC_KEY); })();
-
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbVi17dM2VZae1RhNBDsbCaa71ozHwRzvFEi8jAnmN44MUCa5L7HkqN8QKAhZiqB_ZV/exec";
         let currentUser = null;
         let allUsers = [];
         let myChart = null;
@@ -124,7 +116,6 @@
         async function handleRegister(e) {
             e.preventDefault();
             const data = {
-                type: 'user',
                 name: document.getElementById('reg-name').value,
                 email: document.getElementById('reg-email').value,
                 pass: document.getElementById('reg-pass').value,
@@ -142,12 +133,11 @@
             const resp = await fetch(SCRIPT_URL + "?type=user");
             const rows = await resp.json();
             
-            // Vi filtrerer overskrifter fra og finder brugeren
             const userRow = rows.slice(1).find(r => r[1] === email && String(r[2]) === String(pass));
             if(userRow) {
                 currentUser = { name: userRow[0], email: userRow[1], dept: userRow[3] };
                 loginSuccess();
-            } else { alert("Login fejlede. Husk at oprette din profil først."); }
+            } else { alert("Login fejlede. Tjek e-mail og password."); }
         }
 
         function loginSuccess() {
@@ -163,19 +153,18 @@
             allUsers = await userResp.json();
             const refResp = await fetch(SCRIPT_URL + "?type=referral");
             const allRefs = await refResp.json();
-            renderUserTable(allRefs.slice(1)); // Fjern overskrifter
+            renderUserTable(allRefs.slice(1));
             initChart(allRefs.slice(1));
         }
 
         function renderUserTable(refs) {
             const tbody = document.getElementById('user-table-body');
-            // Afsender er kolonne 7, Modtager er kolonne 8 i din Henvisninger-fane
             const myRefs = refs.filter(r => r[7] === currentUser.name || r[8] === currentUser.name);
             tbody.innerHTML = myRefs.reverse().map(ref => `
                 <tr class="border-b">
                     <td class="p-3 text-gray-400 text-[10px]">${new Date(ref[0]).toLocaleDateString('da-DK')}</td>
                     <td class="p-3 font-bold text-navy uppercase text-[10px]">${ref[1]}</td>
-                    <td class="p-3 italic text-gray-400 text-[10px]">${ref[7] === currentUser.name ? 'Sendt til: ' + ref[8] : 'Modtaget fra: ' + ref[7]}</td>
+                    <td class="p-3 italic text-gray-400 text-[10px]">${ref[7] === currentUser.name ? 'Til: ' + ref[8] : 'Fra: ' + ref[7]}</td>
                     <td class="p-3 text-right font-bold text-gold italic uppercase text-[10px]">${ref[9] || 'Sendt'}</td>
                 </tr>
             `).join('');
@@ -200,11 +189,10 @@
             const company = document.getElementById('comp-name').value;
             
             if(!company || !advisorName) return alert("Udfyld venligst alt.");
-            btn.innerText = "Behandler...";
+            btn.innerText = "Sender...";
             btn.disabled = true;
 
             const data = {
-                type: 'referral',
                 company: company,
                 cvr: document.getElementById('cvr-input').value,
                 employees: document.getElementById('comp-employees').value,
@@ -212,27 +200,26 @@
                 contactPhone: document.getElementById('contact-phone').value,
                 contactEmail: document.getElementById('contact-email').value,
                 senderName: currentUser.name,
+                sender_email: currentUser.email,
                 receiverName: advisorName,
+                advisor_email: advisorEmail,
                 comment: document.getElementById('comment').value
             };
 
             try {
-                await fetch(SCRIPT_URL + "?type=referral", { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
-                const templateParams = {
-                    advisor_name: advisorName, advisor_email: advisorEmail,
-                    from_name: currentUser.name, from_email: currentUser.email, from_dept: currentUser.dept || "S&P",
-                    company: company, employees: data.employees,
-                    contact_name: data.contactName, contact_phone: data.contactPhone, contact_email: data.contactEmail,
-                    message: data.comment
-                };
-                await emailjs.send(EMAILJS_SERVICE_ID, TEMPLATE_ADVISOR, templateParams);
-                await new Promise(r => setTimeout(r, 1500));
-                await emailjs.send(EMAILJS_SERVICE_ID, TEMPLATE_RECEIPT, templateParams);
-                alert("Henvisning sendt succesfuldt!");
+                // Vi sender det hele til Google Apps Script
+                await fetch(SCRIPT_URL + "?type=referral", { 
+                    method: 'POST', 
+                    mode: 'no-cors', 
+                    body: JSON.stringify(data) 
+                });
+
+                alert("Succes! Henvisning er gemt og mails er sendt via Google.");
                 location.reload();
             } catch (error) {
-                alert("Fejl i mailsystemet, men data er gemt i ark.");
+                alert("Der skete en fejl. Tjek din internetforbindelse.");
                 btn.disabled = false;
+                btn.innerText = "Send Henvisning";
             }
         }
 
