@@ -96,14 +96,15 @@
                 </div>
                 <div class="card p-6">
                     <h3 class="text-lg font-bold text-navy mb-4 italic underline text-sm">Dine Seneste Henvisninger</h3>
-                    <table class="w-full text-left text-xs"><tbody id="user-table-body"></tbody></table>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs"><tbody id="user-table-body"></tbody></table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // DIN OPDATEREDE GOOGLE APPS SCRIPT URL
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzhe3jhrmP-tIH1Ks-eOWpUD8OKWvnTfkxUmA-y1KNvh66pvo7G3_1bnnrAorsr8MAP/exec";
         
         let currentUser = null;
@@ -119,7 +120,6 @@
             e.preventDefault();
             const btn = document.getElementById('reg-btn');
             btn.innerText = "Behandler...";
-            
             const data = {
                 type: 'user',
                 name: document.getElementById('reg-name').value,
@@ -127,14 +127,8 @@
                 pass: document.getElementById('reg-pass').value,
                 dept: document.getElementById('reg-dept').value
             };
-
-            await fetch(SCRIPT_URL + "?type=user", { 
-                method: 'POST', 
-                mode: 'no-cors', 
-                body: JSON.stringify(data) 
-            });
-            
-            alert("Bruger oprettet! Prøv nu at logge ind.");
+            await fetch(SCRIPT_URL + "?type=user", { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
+            alert("Bruger oprettet! Du kan nu logge ind.");
             location.reload();
         }
 
@@ -142,17 +136,12 @@
             e.preventDefault();
             const loginBtn = document.getElementById('login-btn');
             loginBtn.innerText = "Logger ind...";
-            
             const email = document.getElementById('login-email').value;
             const pass = document.getElementById('login-pass').value;
-
             try {
                 const resp = await fetch(SCRIPT_URL + "?type=user");
                 const rows = await resp.json();
-                
-                // Vi leder efter brugeren (skip række 0 med overskrifter)
                 const userRow = rows.slice(1).find(r => r[1] === email && String(r[2]) === String(pass));
-                
                 if(userRow) {
                     currentUser = { name: userRow[0], email: userRow[1], dept: userRow[3] };
                     loginSuccess();
@@ -161,7 +150,7 @@
                     loginBtn.innerText = "Log ind";
                 }
             } catch (err) {
-                alert("Kunne ikke kontakte databasen. Har du husket at give 'Alle' adgang i Google Script?");
+                alert("Kunne ikke kontakte databasen.");
                 loginBtn.innerText = "Log ind";
             }
         }
@@ -234,23 +223,20 @@
             };
 
             try {
-                await fetch(SCRIPT_URL + "?type=referral", { 
-                    method: 'POST', 
-                    mode: 'no-cors', 
-                    body: JSON.stringify(data) 
-                });
-                alert("Succes! Henvisning er du sendt og du vil modtage en kvittering.");
+                await fetch(SCRIPT_URL + "?type=referral", { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
+                alert("Succes! Henvisning er gemt og mails er sendt.");
+                
+                // Nulstil formularen i stedet for at reloade
                 btn.innerText = "Send Henvisning";
-btn.disabled = false;
-loadData(); // Opdaterer tabellen og grafen med det samme
-// Nulstil formular-felterne
-document.getElementById('cvr-input').value = "";
-document.getElementById('comp-name').value = "";
-document.getElementById('comp-employees').value = "";
-document.getElementById('contact-name').value = "";
-document.getElementById('contact-phone').value = "";
-document.getElementById('contact-email').value = "";
-document.getElementById('comment').value = "";
+                btn.disabled = false;
+                document.getElementById('cvr-input').value = "";
+                document.getElementById('comp-name').value = "";
+                document.getElementById('comp-employees').value = "";
+                document.getElementById('contact-name').value = "";
+                document.getElementById('contact-phone').value = "";
+                document.getElementById('contact-email').value = "";
+                document.getElementById('comment').value = "";
+                loadData();
             } catch (error) {
                 alert("Fejl ved afsendelse.");
                 btn.disabled = false;
