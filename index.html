@@ -14,6 +14,7 @@
         .text-navy { color: var(--sp-navy); }
         .btn-primary { background-color: var(--sp-navy); color: white; transition: all 0.2s; }
         .card { background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e5e7eb; }
+        .status-select { font-size: 10px; padding: 2px; border-radius: 4px; border: 1px solid #ccc; }
     </style>
 </head>
 <body>
@@ -25,6 +26,7 @@
                 <span class="text-xl font-semibold tracking-tight uppercase tracking-widest text-sm md:text-xl">sp-henvisning.dk</span>
             </div>
             <div id="user-info" class="hidden flex items-center space-x-4 text-sm text-white">
+                <span id="admin-badge" class="hidden bg-red-600 px-2 py-1 rounded text-[10px] font-bold">ADMIN</span>
                 <strong id="display-name"></strong>
                 <button onclick="location.reload()" class="bg-white/10 px-3 py-1 rounded hover:bg-white/20 transition text-xs">Log ud</button>
             </div>
@@ -36,7 +38,7 @@
             <div id="login-view">
                 <h2 class="text-2xl font-bold text-navy mb-6 text-center italic underline">Log ind</h2>
                 <form onsubmit="handleLogin(event)" class="space-y-4">
-                    <input type="email" id="login-email" placeholder="Din arbejds e-mail" required class="w-full p-3 border rounded text-sm outline-none">
+                    <input type="email" id="login-email" placeholder="Din e-mail" required class="w-full p-3 border rounded text-sm outline-none">
                     <input type="password" id="login-pass" placeholder="Password" required class="w-full p-3 border rounded text-sm outline-none">
                     <button type="submit" id="login-btn" class="w-full btn-primary py-3 rounded-lg font-bold">Log ind</button>
                 </form>
@@ -48,9 +50,9 @@
             <div id="register-view" class="hidden">
                 <h2 class="text-2xl font-bold text-navy mb-6 text-center">Opret Profil</h2>
                 <form onsubmit="handleRegister(event)" class="space-y-4">
-                    <input type="text" id="reg-name" placeholder="Fornavn og Efternavn" required class="w-full p-2 border rounded text-sm">
+                    <input type="text" id="reg-name" placeholder="Navn" required class="w-full p-2 border rounded text-sm">
                     <input type="email" id="reg-email" placeholder="E-mail" required class="w-full p-2 border rounded text-sm">
-                    <input type="password" id="reg-pass" placeholder="Vælg Password" required class="w-full p-2 border rounded text-sm">
+                    <input type="password" id="reg-pass" placeholder="Password" required class="w-full p-2 border rounded text-sm">
                     <select id="reg-dept" class="w-full p-2 border rounded bg-white text-sm">
                         <option value="Non-Life">Non-Life</option>
                         <option value="Pensions">Pensions</option>
@@ -63,41 +65,55 @@
         </div>
 
         <div id="dashboard-section" class="hidden space-y-6">
+            
+            <div id="admin-view" class="hidden space-y-6">
+                <h2 class="text-2xl font-bold text-navy italic border-b-2 border-gold pb-2">Admin Dashboard</h2>
+                <div class="grid md:grid-cols-3 gap-4">
+                    <div class="card p-4 text-center"><h4 class="text-[10px] font-bold uppercase text-gray-400">Non-Life</h4><canvas id="chartNonLife"></canvas></div>
+                    <div class="card p-4 text-center"><h4 class="text-[10px] font-bold uppercase text-gray-400">Pensions</h4><canvas id="chartPensions"></canvas></div>
+                    <div class="card p-4 text-center"><h4 class="text-[10px] font-bold uppercase text-gray-400">FOGI</h4><canvas id="chartFogi"></canvas></div>
+                </div>
+                <div class="card p-6 overflow-x-auto">
+                    <h3 class="font-bold text-navy mb-4 italic">Alle Henvisninger (Master Liste)</h3>
+                    <table class="w-full text-[10px] text-left">
+                        <thead><tr class="bg-gray-100"><th class="p-2">Dato</th><th>Kunde</th><th>Fra</th><th>Til</th><th>Status</th><th>Besked</th></tr></thead>
+                        <tbody id="admin-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
             <div id="user-view" class="space-y-6">
                 <div class="grid md:grid-cols-3 gap-6">
                     <div class="card p-6 text-center">
-                        <h4 class="text-[10px] font-bold text-gray-400 uppercase mb-4 tracking-widest">Din Statistik</h4>
+                        <h4 class="text-[10px] font-bold text-gray-400 uppercase mb-4">Din Aktivitet</h4>
                         <canvas id="referralChart" height="250"></canvas>
                     </div>
                     <div class="md:col-span-2 card p-8">
                         <h3 class="text-xl font-bold text-navy mb-6 italic underline">Ny Henvisning</h3>
                         <div class="grid md:grid-cols-2 gap-8 text-sm">
                             <div class="space-y-4">
-                                <label class="block font-bold text-gray-400 uppercase text-[10px]">Virksomhedsdata</label>
-                                <div class="flex"><input type="text" id="cvr-input" maxlength="8" placeholder="Indtast CVR..." class="w-full p-2 border rounded-l outline-none border-gray-300"><button onclick="lookupCVR()" class="bg-navy text-white px-4 rounded-r font-bold text-xs uppercase">Søg</button></div>
-                                <input type="text" id="comp-name" placeholder="Navn" class="w-full p-2 border rounded bg-gray-50 font-bold" readonly>
-                                <input type="text" id="comp-employees" placeholder="Antal Ansatte" class="w-full p-2 border rounded bg-blue-50 text-[10px]" readonly>
-                                <div class="pt-2 border-t border-gray-100 space-y-2">
-                                    <label class="block font-bold text-gray-400 uppercase text-[10px]">Kontakt hos kunden</label>
-                                    <input type="text" id="contact-name" placeholder="Navn" class="w-full p-2 border rounded text-[10px]">
-                                    <input type="tel" id="contact-phone" placeholder="Telefon" class="w-full p-2 border rounded text-[10px]">
-                                    <input type="email" id="contact-email" placeholder="E-mail" class="w-full p-2 border rounded text-[10px]">
-                                </div>
+                                <label class="text-[10px] font-bold text-gray-400 uppercase">Kundeinfo</label>
+                                <div class="flex"><input type="text" id="cvr-input" maxlength="8" placeholder="CVR..." class="w-full p-2 border rounded-l outline-none"><button onclick="lookupCVR()" class="bg-navy text-white px-4 rounded-r font-bold text-xs">SØG</button></div>
+                                <input type="text" id="comp-name" placeholder="Virksomhed" class="w-full p-2 border rounded bg-gray-50 font-bold" readonly>
+                                <input type="text" id="comp-employees" placeholder="Ansatte" class="w-full p-2 border rounded bg-blue-50 text-[10px]" readonly>
+                                <input type="text" id="contact-name" placeholder="Kontaktnavn" class="w-full p-2 border rounded text-[10px]">
+                                <input type="tel" id="contact-phone" placeholder="Telefon" class="w-full p-2 border rounded text-[10px]">
+                                <input type="email" id="contact-email" placeholder="E-mail" class="w-full p-2 border rounded text-[10px]">
                             </div>
                             <div class="space-y-3">
-                                <label class="block font-bold text-gray-400 uppercase text-[10px]">Vælg Modtager</label>
+                                <label class="text-[10px] font-bold text-gray-400 uppercase">Modtager</label>
                                 <select id="target-dept" onchange="filterAdvisors()" class="w-full p-2 border rounded font-bold border-navy text-navy"><option value="">Vælg Afdeling...</option><option value="Non-Life">Non-Life</option><option value="Pensions">Pensions</option><option value="FOGI">FOGI</option></select>
                                 <select id="advisor-select" class="w-full p-2 border rounded text-navy border-gray-300"><option value="">Vælg Rådgiver...</option></select>
-                                <textarea id="comment" placeholder="Besked/Note..." class="w-full p-2 border rounded h-20 text-[10px]"></textarea>
-                                <button onclick="sendReferral()" id="send-btn" class="w-full btn-primary py-3 rounded-lg font-bold shadow-lg uppercase text-xs tracking-widest">Send Henvisning</button>
+                                <textarea id="comment" placeholder="Besked..." class="w-full p-2 border rounded h-20 text-[10px]"></textarea>
+                                <button onclick="sendReferral()" id="send-btn" class="w-full btn-primary py-3 rounded-lg font-bold uppercase text-xs tracking-widest">Send Henvisning</button>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="card p-6">
-                    <h3 class="text-lg font-bold text-navy mb-4 italic underline text-sm">Dine Seneste Henvisninger</h3>
+                    <h3 class="text-lg font-bold text-navy mb-4 italic underline text-sm">Dine Henvisninger (Opdater status her)</h3>
                     <div class="overflow-x-auto">
-                        <table class="w-full text-left text-xs"><tbody id="user-table-body"></tbody></table>
+                        <table class="w-full text-left text-[10px]"><tbody id="user-table-body"></tbody></table>
                     </div>
                 </div>
             </div>
@@ -109,6 +125,7 @@
         
         let currentUser = null;
         let allUsers = [];
+        let allRefs = [];
         let myChart = null;
 
         function toggleAuth(view) {
@@ -118,41 +135,30 @@
 
         async function handleRegister(e) {
             e.preventDefault();
-            const btn = document.getElementById('reg-btn');
-            btn.innerText = "Behandler...";
-            const data = {
-                type: 'user',
-                name: document.getElementById('reg-name').value,
-                email: document.getElementById('reg-email').value,
-                pass: document.getElementById('reg-pass').value,
-                dept: document.getElementById('reg-dept').value
-            };
+            const data = { type: 'user', name: document.getElementById('reg-name').value, email: document.getElementById('reg-email').value, pass: document.getElementById('reg-pass').value, dept: document.getElementById('reg-dept').value };
             await fetch(SCRIPT_URL + "?type=user", { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
-            alert("Bruger oprettet! Du kan nu logge ind.");
-            location.reload();
+            alert("Profil oprettet!"); location.reload();
         }
 
         async function handleLogin(e) {
             e.preventDefault();
-            const loginBtn = document.getElementById('login-btn');
-            loginBtn.innerText = "Logger ind...";
             const email = document.getElementById('login-email').value;
             const pass = document.getElementById('login-pass').value;
-            try {
-                const resp = await fetch(SCRIPT_URL + "?type=user");
-                const rows = await resp.json();
-                const userRow = rows.slice(1).find(r => r[1] === email && String(r[2]) === String(pass));
-                if(userRow) {
-                    currentUser = { name: userRow[0], email: userRow[1], dept: userRow[3] };
-                    loginSuccess();
-                } else {
-                    alert("Login fejlede. Tjek e-mail og password.");
-                    loginBtn.innerText = "Log ind";
-                }
-            } catch (err) {
-                alert("Kunne ikke kontakte databasen.");
-                loginBtn.innerText = "Log ind";
+
+            // SPECIAL ADMIN LOGIN
+            if(email === "admin@sp.dk" && pass === "Admin1234!") {
+                currentUser = { name: "Administrator", email: email, role: "admin" };
+                loginSuccess();
+                return;
             }
+
+            const resp = await fetch(SCRIPT_URL + "?type=user");
+            const rows = await resp.json();
+            const userRow = rows.slice(1).find(r => r[1] === email && String(r[2]) === String(pass));
+            if(userRow) {
+                currentUser = { name: userRow[0], email: userRow[1], dept: userRow[3], role: 'user' };
+                loginSuccess();
+            } else { alert("Login fejlede."); }
         }
 
         function loginSuccess() {
@@ -160,6 +166,10 @@
             document.getElementById('dashboard-section').classList.remove('hidden');
             document.getElementById('user-info').classList.remove('hidden');
             document.getElementById('display-name').innerText = currentUser.name;
+            if(currentUser.role === 'admin') {
+                document.getElementById('admin-badge').classList.remove('hidden');
+                document.getElementById('admin-view').classList.remove('hidden');
+            }
             loadData();
         }
 
@@ -167,22 +177,70 @@
             const userResp = await fetch(SCRIPT_URL + "?type=user");
             allUsers = await userResp.json();
             const refResp = await fetch(SCRIPT_URL + "?type=referral");
-            const allRefs = await refResp.json();
+            allRefs = await refResp.json();
+            
             renderUserTable(allRefs.slice(1));
             initChart(allRefs.slice(1));
+            if(currentUser.role === 'admin') renderAdminDashboard(allRefs.slice(1));
         }
 
         function renderUserTable(refs) {
             const tbody = document.getElementById('user-table-body');
             const myRefs = refs.filter(r => r[7] === currentUser.name || r[8] === currentUser.name);
-            tbody.innerHTML = myRefs.reverse().map(ref => `
+            tbody.innerHTML = myRefs.reverse().map((ref, idx) => {
+                const isReceiver = ref[8] === currentUser.name;
+                const statusOptions = ['Sendt', 'I gang', 'Vundet', 'Tabt'].map(s => 
+                    `<option value="${s}" ${ref[9] === s ? 'selected' : ''}>${s}</option>`
+                ).join('');
+
+                return `
                 <tr class="border-b">
-                    <td class="p-3 text-gray-400 text-[10px]">${new Date(ref[0]).toLocaleDateString('da-DK')}</td>
-                    <td class="p-3 font-bold text-navy uppercase text-[10px]">${ref[1]}</td>
-                    <td class="p-3 italic text-gray-400 text-[10px]">${ref[7] === currentUser.name ? 'Til: ' + ref[8] : 'Fra: ' + ref[7]}</td>
-                    <td class="p-3 text-right font-bold text-gold italic uppercase text-[10px]">${ref[9] || 'Sendt'}</td>
+                    <td class="p-3 text-gray-400">${new Date(ref[0]).toLocaleDateString('da-DK')}</td>
+                    <td class="p-3 font-bold text-navy uppercase">${ref[1]}</td>
+                    <td class="p-3">${ref[7] === currentUser.name ? 'Til: ' + ref[8] : 'Fra: ' + ref[7]}</td>
+                    <td class="p-3">
+                        ${isReceiver ? `<select onchange="updateStatus('${ref[0]}', this.value)" class="status-select">${statusOptions}</select>` : `<span class="italic text-gold">${ref[9] || 'Sendt'}</span>`}
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        async function updateStatus(timestamp, newStatus) {
+            // Vi sender opdatering til Google
+            const data = { action: 'updateStatus', timestamp: timestamp, newStatus: newStatus };
+            await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
+            alert("Status opdateret i systemet.");
+            loadData();
+        }
+
+        function renderAdminDashboard(refs) {
+            const tbody = document.getElementById('admin-table-body');
+            tbody.innerHTML = refs.map(r => `
+                <tr class="border-b">
+                    <td class="p-2">${new Date(r[0]).toLocaleDateString()}</td>
+                    <td class="font-bold">${r[1]}</td>
+                    <td>${r[7]}</td>
+                    <td>${r[8]}</td>
+                    <td class="text-gold font-bold">${r[9]}</td>
+                    <td class="text-gray-400">${r[10].substring(0,20)}...</td>
                 </tr>
             `).join('');
+
+            // Admin grafer
+            updateAdminChart('chartNonLife', refs, 'Non-Life');
+            updateAdminChart('chartPensions', refs, 'Pensions');
+            updateAdminChart('chartFogi', refs, 'FOGI');
+        }
+
+        function updateAdminChart(id, refs, dept) {
+            const ctx = document.getElementById(id).getContext('2d');
+            const deptRefs = refs.filter(r => {
+                const user = allUsers.find(u => u[0] === r[8]);
+                return user && user[3] === dept;
+            });
+            const vundet = deptRefs.filter(r => r[9] === 'Vundet').length;
+            const rest = deptRefs.length - vundet;
+            new Chart(ctx, { type: 'pie', data: { labels: ['Vundet', 'Andre'], datasets: [{ data: [vundet, rest], backgroundColor: ['#a68d5d', '#002147'] }] }, options: { plugins: { legend: { display: false } } } });
         }
 
         function filterAdvisors() {
@@ -190,8 +248,7 @@
             const select = document.getElementById('advisor-select');
             select.innerHTML = '<option value="">Vælg Rådgiver...</option>';
             allUsers.slice(1).filter(u => u[3] === dept).forEach(u => {
-                let opt = document.createElement('option'); 
-                opt.value = u[0]; opt.dataset.email = u[1]; opt.innerHTML = u[0];
+                let opt = document.createElement('option'); opt.value = u[0]; opt.dataset.email = u[1]; opt.innerHTML = u[0];
                 select.appendChild(opt);
             });
         }
@@ -202,51 +259,28 @@
             const advisorName = select.value;
             const advisorEmail = select.options[select.selectedIndex]?.dataset.email;
             const company = document.getElementById('comp-name').value;
-            
-            if(!company || !advisorName) return alert("Udfyld venligst alt.");
-            btn.innerText = "Sender...";
-            btn.disabled = true;
+            if(!company || !advisorName) return alert("Mangler data.");
+            btn.innerText = "Sender..."; btn.disabled = true;
 
             const data = {
-                type: 'referral',
-                company: company,
-                cvr: document.getElementById('cvr-input').value,
-                employees: document.getElementById('comp-employees').value,
-                contactName: document.getElementById('contact-name').value,
-                contactPhone: document.getElementById('contact-phone').value,
-                contactEmail: document.getElementById('contact-email').value,
-                senderName: currentUser.name,
-                sender_email: currentUser.email,
-                receiverName: advisorName,
-                advisor_email: advisorEmail,
+                type: 'referral', company: company, cvr: document.getElementById('cvr-input').value,
+                employees: document.getElementById('comp-employees').value, contactName: document.getElementById('contact-name').value,
+                contactPhone: document.getElementById('contact-phone').value, contactEmail: document.getElementById('contact-email').value,
+                senderName: currentUser.name, sender_email: currentUser.email, receiverName: advisorName, advisor_email: advisorEmail,
                 comment: document.getElementById('comment').value
             };
 
-            try {
-                await fetch(SCRIPT_URL + "?type=referral", { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
-                alert("Succes! Henvisning er gemt og mails er sendt.");
-                
-                // Nulstil formularen i stedet for at reloade
-                btn.innerText = "Send Henvisning";
-                btn.disabled = false;
-                document.getElementById('cvr-input').value = "";
-                document.getElementById('comp-name').value = "";
-                document.getElementById('comp-employees').value = "";
-                document.getElementById('contact-name').value = "";
-                document.getElementById('contact-phone').value = "";
-                document.getElementById('contact-email').value = "";
-                document.getElementById('comment').value = "";
-                loadData();
-            } catch (error) {
-                alert("Fejl ved afsendelse.");
-                btn.disabled = false;
-                btn.innerText = "Send Henvisning";
-            }
+            await fetch(SCRIPT_URL + "?type=referral", { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
+            alert("Sendt!");
+            
+            // STAY LOGGED IN: Nulstil felter og genindlæs data
+            btn.innerText = "Send Henvisning"; btn.disabled = false;
+            ['cvr-input','comp-name','comp-employees','contact-name','contact-phone','contact-email','comment'].forEach(id => document.getElementById(id).value = "");
+            loadData();
         }
 
         async function lookupCVR() {
             const cvr = document.getElementById('cvr-input').value;
-            if(!cvr) return;
             const resp = await fetch(`https://cvrapi.dk/api?search=${cvr}&country=dk`);
             const d = await resp.json();
             document.getElementById('comp-name').value = d.name || "Ikke fundet";
@@ -258,11 +292,7 @@
             const sent = refs.filter(r => r[7] === currentUser.name).length;
             const received = refs.filter(r => r[8] === currentUser.name).length;
             if(myChart) myChart.destroy();
-            myChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: { labels: ['Sendt', 'Modtaget'], datasets: [{ data: [sent, received], backgroundColor: ['#002147', '#a68d5d'] }] },
-                options: { cutout: '80%', plugins: { legend: { position: 'bottom' } } }
-            });
+            myChart = new Chart(ctx, { type: 'doughnut', data: { labels: ['Sendt', 'Modtaget'], datasets: [{ data: [sent, received], backgroundColor: ['#002147', '#a68d5d'] }] }, options: { cutout: '80%', plugins: { legend: { position: 'bottom' } } } });
         }
     </script>
 </body>
