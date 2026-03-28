@@ -74,7 +74,7 @@
                         <div class="grid md:grid-cols-2 gap-8 text-sm">
                             <div class="space-y-4">
                                 <label class="block font-bold text-gray-400 uppercase text-[10px]">Virksomhedsdata</label>
-                                <div class="flex"><input type="text" id="cvr-input" maxlength="8" placeholder="Indtast CVR..." class="w-full p-2 border rounded-l outline-none border-gray-300"><button onclick="lookupCVR()" class="bg-navy text-white px-4 rounded-r font-bold text-xs uppercase">Søg</button></div>
+                                <div class="flex"><input type="text" id="cvr-input" maxlength="8" placeholder="CVR nr..." class="w-full p-2 border rounded-l outline-none border-gray-300"><button onclick="lookupCVR()" class="bg-navy text-white px-4 rounded-r font-bold text-xs uppercase">Søg</button></div>
                                 <input type="text" id="comp-name" placeholder="Navn" class="w-full p-2 border rounded bg-gray-50 font-bold" readonly>
                                 <input type="text" id="comp-employees" placeholder="Antal Ansatte" class="w-full p-2 border rounded bg-blue-50 text-[10px]" readonly>
                                 <div class="pt-2 border-t border-gray-100 space-y-2">
@@ -96,14 +96,18 @@
                 </div>
                 <div class="card p-6">
                     <h3 class="text-lg font-bold text-navy mb-4 italic underline text-sm">Dine Seneste Henvisninger</h3>
-                    <table class="w-full text-left text-xs"><tbody id="user-table-body"></tbody></table>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs"><tbody id="user-table-body"></tbody></table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
+        // DIN GOOGLE APPS SCRIPT URL
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbVi17dM2VZae1RhNBDsbCaa71ozHwRzvFEi8jAnmN44MUCa5L7HkqN8QKAhZiqB_ZV/exec";
+        
         let currentUser = null;
         let allUsers = [];
         let myChart = null;
@@ -133,6 +137,7 @@
             const resp = await fetch(SCRIPT_URL + "?type=user");
             const rows = await resp.json();
             
+            // Finder brugeren i rækkerne (vi dropper overskriften i række 0)
             const userRow = rows.slice(1).find(r => r[1] === email && String(r[2]) === String(pass));
             if(userRow) {
                 currentUser = { name: userRow[0], email: userRow[1], dept: userRow[3] };
@@ -200,24 +205,24 @@
                 contactPhone: document.getElementById('contact-phone').value,
                 contactEmail: document.getElementById('contact-email').value,
                 senderName: currentUser.name,
-                sender_email: currentUser.email,
+                sender_email: currentUser.email, // E-mail til kvittering
                 receiverName: advisorName,
-                advisor_email: advisorEmail,
+                advisor_email: advisorEmail,    // E-mail til rådgiver
                 comment: document.getElementById('comment').value
             };
 
             try {
-                // Vi sender det hele til Google Apps Script
+                // Sender ALT til Google Apps Script (som gemmer og sender mails)
                 await fetch(SCRIPT_URL + "?type=referral", { 
                     method: 'POST', 
                     mode: 'no-cors', 
                     body: JSON.stringify(data) 
                 });
 
-                alert("Succes! Henvisning er gemt og mails er sendt via Google.");
+                alert("Succes! Henvisning er gemt og mails er sendt.");
                 location.reload();
             } catch (error) {
-                alert("Der skete en fejl. Tjek din internetforbindelse.");
+                alert("Der skete en fejl i kommunikationen med Google.");
                 btn.disabled = false;
                 btn.innerText = "Send Henvisning";
             }
