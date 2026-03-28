@@ -26,7 +26,7 @@
                 <span class="text-xl font-semibold tracking-tight uppercase tracking-widest text-sm md:text-xl">sp-henvisning.dk</span>
             </div>
             <div id="user-info" class="hidden flex items-center space-x-4 text-sm text-white">
-                <span id="admin-indicator" class="hidden bg-red-600 px-2 py-1 rounded text-[10px] font-bold uppercase">Admin</span>
+                <span id="admin-indicator" class="hidden bg-red-600 px-2 py-1 rounded text-[10px] font-bold uppercase text-white">Admin</span>
                 <strong id="display-name"></strong>
                 <button onclick="location.reload()" class="bg-white/10 px-3 py-1 rounded hover:bg-white/20 transition text-xs">Log ud</button>
             </div>
@@ -36,22 +36,22 @@
     <div class="container mx-auto py-8 px-4 max-w-6xl">
         <div id="auth-section" class="max-w-md mx-auto card p-8 mt-10">
             <div id="login-view">
-                <h2 class="text-2xl font-bold text-navy mb-6 text-center italic underline text-navy">Log ind</h2>
+                <h2 class="text-2xl font-bold text-navy mb-6 text-center italic underline">Log ind</h2>
                 <form onsubmit="handleLogin(event)" class="space-y-4">
                     <input type="email" id="login-email" placeholder="E-mail" required class="w-full p-3 border rounded text-sm outline-none">
                     <input type="password" id="login-pass" placeholder="Password" required class="w-full p-3 border rounded text-sm outline-none">
                     <button type="submit" id="login-btn" class="w-full btn-primary py-3 rounded-lg font-bold">Log ind</button>
                 </form>
-                <div class="mt-6 text-center space-y-2">
+                <div class="mt-6 text-center">
                     <p class="text-sm text-gray-600 italic underline cursor-pointer" onclick="toggleAuth('register')">Ny bruger? Opret dig her</p>
                 </div>
             </div>
 
             <div id="register-view" class="hidden">
-                <h2 class="text-2xl font-bold text-navy mb-6 text-center text-navy">Opret Profil</h2>
+                <h2 class="text-2xl font-bold text-navy mb-6 text-center">Opret Profil</h2>
                 <form onsubmit="handleRegister(event)" class="space-y-4">
                     <input type="text" id="reg-name" placeholder="Fornavn og Efternavn" required class="w-full p-2 border rounded text-sm">
-                    <input type="email" id="reg-email" placeholder="Din E-mail" required class="w-full p-2 border rounded text-sm">
+                    <input type="email" id="reg-email" placeholder="E-mail" required class="w-full p-2 border rounded text-sm">
                     <input type="password" id="reg-pass" placeholder="Vælg Password" required class="w-full p-2 border rounded text-sm">
                     <select id="reg-dept" class="w-full p-2 border rounded bg-white text-sm">
                         <option value="Non-Life">Non-Life</option>
@@ -76,13 +76,14 @@
                         <div class="grid md:grid-cols-2 gap-8 text-sm">
                             <div class="space-y-4">
                                 <label class="block font-bold text-gray-400 uppercase text-[10px]">Virksomhedsdata</label>
-                                <div class="flex"><input type="text" id="cvr-input" maxlength="8" placeholder="Indtast CVR..." class="w-full p-2 border rounded-l outline-none border-gray-300"><button onclick="lookupCVR()" class="bg-navy text-white px-4 rounded-r font-bold text-xs uppercase">Søg</button></div>
+                                <div class="flex"><input type="text" id="cvr-input" maxlength="8" placeholder="Indtast CVR nr..." class="w-full p-2 border rounded-l outline-none border-gray-300"><button onclick="lookupCVR()" class="bg-navy text-white px-4 rounded-r font-bold text-xs uppercase">Søg</button></div>
                                 <input type="text" id="comp-name" placeholder="Navn" class="w-full p-2 border rounded bg-gray-50 font-bold" readonly>
                                 <input type="text" id="comp-employees" placeholder="Antal Ansatte" class="w-full p-2 border rounded bg-blue-50 text-[10px]" readonly>
                                 <div class="pt-2 border-t border-gray-100 space-y-2">
                                     <label class="block font-bold text-gray-400 uppercase text-[10px]">Kontaktperson hos kunden</label>
                                     <input type="text" id="contact-name" placeholder="Navn" class="w-full p-2 border rounded text-[10px]">
-                                    <input type="text" id="contact-info" placeholder="Tlf / E-mail på kunden" class="w-full p-2 border rounded text-[10px]">
+                                    <input type="tel" id="contact-phone" placeholder="Telefon" class="w-full p-2 border rounded text-[10px]">
+                                    <input type="email" id="contact-email" placeholder="E-mail" class="w-full p-2 border rounded text-[10px]">
                                 </div>
                             </div>
                             <div class="space-y-3">
@@ -97,21 +98,19 @@
                 </div>
                 <div class="card p-6">
                     <h3 class="text-lg font-bold text-navy mb-4 italic underline text-sm">Dine Henvisninger</h3>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-xs"><tbody id="user-table-body"></tbody></table>
-                    </div>
+                    <table class="w-full text-left text-xs"><tbody id="user-table-body"></tbody></table>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // --- ID KONFIGURATION ---
+        // ID KONFIGURATION
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxlrjJp8I3MItotSUCUMagOWU85xTpD1_fxTjhyDh28tOgeVWA6PMYUrdMD5BCLehBx/exec";
         const EMAILJS_PUBLIC_KEY = "GhSoP7srq__KYtOsO";
         const EMAILJS_SERVICE_ID = "service_hsal1vo";
-        const TEMPLATE_ADVISOR = "template_onscdrx"; // Til rådgiveren
-        const TEMPLATE_RECEIPT = "template_2ai8tbb"; // Til afsenderen (kvittering)
+        const TEMPLATE_ADVISOR = "template_onscdrx"; 
+        const TEMPLATE_RECEIPT = "template_2ai8tbb"; 
 
         (function() { emailjs.init(EMAILJS_PUBLIC_KEY); })();
 
@@ -215,7 +214,8 @@
                 cvr: document.getElementById('cvr-input').value,
                 employees: document.getElementById('comp-employees').value,
                 contactName: document.getElementById('contact-name').value,
-                contactPhone: document.getElementById('contact-info').value,
+                contactPhone: document.getElementById('contact-phone').value,
+                contactEmail: document.getElementById('contact-email').value,
                 senderName: currentUser.name,
                 receiverName: advisorName,
                 comment: document.getElementById('comment').value
@@ -224,7 +224,7 @@
             // 1. GEM I GOOGLE SHEET
             await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
 
-            // 2. FORBERED PARAMETRE TIL EMAILJS
+            // 2. SEND MAILS VIA EMAILJS
             const templateParams = {
                 advisor_name: advisorName,
                 advisor_email: advisorEmail,
@@ -234,17 +234,17 @@
                 company: company,
                 employees: data.employees,
                 contact_name: data.contactName,
-                contact_info: data.contactPhone,
+                contact_phone: data.contactPhone,
+                contact_email: data.contactEmail,
                 message: data.comment
             };
 
-            // 3. SEND MAILS (TO STK)
             try {
-                // Mail 1: Til Rådgiveren
-                await emailjs.send(EMAILJS_SERVICE_ID, TEMPLATE_ADVISOR, templateParams);
-                
-                // Mail 2: Til Afsenderen (Kvittering)
-                await emailjs.send(EMAILJS_SERVICE_ID, TEMPLATE_RECEIPT, templateParams);
+                // Send begge mails parallelt
+                await Promise.all([
+                    emailjs.send(EMAILJS_SERVICE_ID, TEMPLATE_ADVISOR, templateParams),
+                    emailjs.send(EMAILJS_SERVICE_ID, TEMPLATE_RECEIPT, templateParams)
+                ]);
 
                 alert("Henvisning sendt! " + advisorName + " har fået besked, og du har modtaget en kvittering.");
                 
@@ -253,14 +253,15 @@
                 document.getElementById('comp-name').value = "";
                 document.getElementById('comp-employees').value = "";
                 document.getElementById('contact-name').value = "";
-                document.getElementById('contact-info').value = "";
+                document.getElementById('contact-phone').value = "";
+                document.getElementById('contact-email').value = "";
                 document.getElementById('comment').value = "";
                 btn.innerText = "Send Henvisning";
                 btn.disabled = false;
                 loadData();
 
             } catch (error) {
-                alert("Data er gemt, men der opstod en fejl i mailsystemet.");
+                alert("Data er gemt i Excel, men der var problemer med mailen. Tjek dine EmailJS indstillinger.");
                 console.error("EmailJS Error:", error);
                 btn.disabled = false;
             }
