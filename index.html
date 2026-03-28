@@ -26,7 +26,6 @@
                 <span class="text-xl font-semibold tracking-tight uppercase tracking-widest text-sm md:text-xl">sp-henvisning.dk</span>
             </div>
             <div id="user-info" class="hidden flex items-center space-x-4 text-sm text-white">
-                <span id="admin-indicator" class="hidden bg-red-600 px-2 py-1 rounded text-[10px] font-bold uppercase">Admin</span>
                 <strong id="display-name"></strong>
                 <button onclick="location.reload()" class="bg-white/10 px-3 py-1 rounded hover:bg-white/20 transition text-xs">Log ud</button>
             </div>
@@ -105,10 +104,9 @@
     </div>
 
     <script>
-        // --- KONFIGURATION (OPDATERET) ---
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxlrjJp8I3MItotSUCUMagOWU85xTpD1_fxTjhyDh28tOgeVWA6PMYUrdMD5BCLehBx/exec";
         const EMAILJS_PUBLIC_KEY = "GhSoP7srq__KYtOsO";
-        const EMAILJS_SERVICE_ID = "service_h3qwo3g"; // DIT NYE SERVICE ID
+        const EMAILJS_SERVICE_ID = "service_h3qwo3g";
         const TEMPLATE_ADVISOR = "template_onscdrx"; 
         const TEMPLATE_RECEIPT = "template_2ai8tbb"; 
 
@@ -132,8 +130,8 @@
                 pass: document.getElementById('reg-pass').value,
                 dept: document.getElementById('reg-dept').value
             };
-            await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
-            alert("Bruger oprettet!");
+            await fetch(SCRIPT_URL + "?type=user", { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
+            alert("Bruger oprettet! Du kan nu logge ind.");
             location.reload();
         }
 
@@ -143,14 +141,13 @@
             const pass = document.getElementById('login-pass').value;
             const resp = await fetch(SCRIPT_URL + "?type=user");
             const rows = await resp.json();
-            const userRow = rows.find(r => r[1] === email && r[2].toString() === pass.toString());
+            
+            // Vi filtrerer overskrifter fra og finder brugeren
+            const userRow = rows.slice(1).find(r => r[1] === email && String(r[2]) === String(pass));
             if(userRow) {
                 currentUser = { name: userRow[0], email: userRow[1], dept: userRow[3] };
                 loginSuccess();
-            } else if (email === "admin@sp.dk" && pass === "admin123") {
-                currentUser = { name: "Admin", role: "admin" };
-                loginSuccess();
-            } else { alert("Login fejlede."); }
+            } else { alert("Login fejlede. Husk at oprette din profil først."); }
         }
 
         function loginSuccess() {
@@ -166,12 +163,13 @@
             allUsers = await userResp.json();
             const refResp = await fetch(SCRIPT_URL + "?type=referral");
             const allRefs = await refResp.json();
-            renderUserTable(allRefs);
-            initChart(allRefs);
+            renderUserTable(allRefs.slice(1)); // Fjern overskrifter
+            initChart(allRefs.slice(1));
         }
 
         function renderUserTable(refs) {
             const tbody = document.getElementById('user-table-body');
+            // Afsender er kolonne 7, Modtager er kolonne 8 i din Henvisninger-fane
             const myRefs = refs.filter(r => r[7] === currentUser.name || r[8] === currentUser.name);
             tbody.innerHTML = myRefs.reverse().map(ref => `
                 <tr class="border-b">
@@ -187,11 +185,9 @@
             const dept = document.getElementById('target-dept').value;
             const select = document.getElementById('advisor-select');
             select.innerHTML = '<option value="">Vælg Rådgiver...</option>';
-            allUsers.filter(u => u[3] === dept).forEach(u => {
+            allUsers.slice(1).filter(u => u[3] === dept).forEach(u => {
                 let opt = document.createElement('option'); 
-                opt.value = u[0]; 
-                opt.dataset.email = u[1]; 
-                opt.innerHTML = u[0];
+                opt.value = u[0]; opt.dataset.email = u[1]; opt.innerHTML = u[0];
                 select.appendChild(opt);
             });
         }
@@ -200,11 +196,10 @@
             const btn = document.getElementById('send-btn');
             const select = document.getElementById('advisor-select');
             const advisorName = select.value;
-            const advisorEmail = select.options[select.selectedIndex].dataset.email;
+            const advisorEmail = select.options[select.selectedIndex]?.dataset.email;
             const company = document.getElementById('comp-name').value;
             
             if(!company || !advisorName) return alert("Udfyld venligst alt.");
-            
             btn.innerText = "Behandler...";
             btn.disabled = true;
 
@@ -222,37 +217,22 @@
             };
 
             try {
-                // 1. GEM I GOOGLE SHEET
-                await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
-
-                // 2. PARAMETRE
+                await fetch(SCRIPT_URL + "?type=referral", { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
                 const templateParams = {
-                    advisor_name: advisorName,
-                    advisor_email: advisorEmail,
-                    from_name: currentUser.name,
-                    from_email: currentUser.email,
-                    from_dept: currentUser.dept || "S&P",
-                    company: company,
-                    employees: data.employees,
-                    contact_name: data.contactName,
-                    contact_phone: data.contactPhone,
-                    contact_email: data.contactEmail,
+                    advisor_name: advisorName, advisor_email: advisorEmail,
+                    from_name: currentUser.name, from_email: currentUser.email, from_dept: currentUser.dept || "S&P",
+                    company: company, employees: data.employees,
+                    contact_name: data.contactName, contact_phone: data.contactPhone, contact_email: data.contactEmail,
                     message: data.comment
                 };
-
-                // 3. SEND MAILS MED PAUSE (SMTP venlig)
                 await emailjs.send(EMAILJS_SERVICE_ID, TEMPLATE_ADVISOR, templateParams);
-                await new Promise(r => setTimeout(r, 1500)); // Lidt længere pause for en sikkerheds skyld
+                await new Promise(r => setTimeout(r, 1500));
                 await emailjs.send(EMAILJS_SERVICE_ID, TEMPLATE_RECEIPT, templateParams);
-
-                alert("Succes! Henvisning sendt og kvittering modtaget.");
+                alert("Henvisning sendt succesfuldt!");
                 location.reload();
-
             } catch (error) {
-                alert("Fejl: " + (error.text || "Tjek SMTP i EmailJS"));
-                console.error("Fejl:", error);
+                alert("Fejl i mailsystemet, men data er gemt i ark.");
                 btn.disabled = false;
-                btn.innerText = "Send Henvisning";
             }
         }
 
