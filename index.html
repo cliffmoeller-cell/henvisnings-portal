@@ -240,7 +240,17 @@
                     body: JSON.stringify(data) 
                 });
                 alert("Succes! Henvisning er du sendt og du vil modtage en kvittering.");
-                location.reload();
+                btn.innerText = "Send Henvisning";
+btn.disabled = false;
+loadData(); // Opdaterer tabellen og grafen med det samme
+// Nulstil formular-felterne
+document.getElementById('cvr-input').value = "";
+document.getElementById('comp-name').value = "";
+document.getElementById('comp-employees').value = "";
+document.getElementById('contact-name').value = "";
+document.getElementById('contact-phone').value = "";
+document.getElementById('contact-email').value = "";
+document.getElementById('comment').value = "";
             } catch (error) {
                 alert("Fejl ved afsendelse.");
                 btn.disabled = false;
